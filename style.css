@@ -252,3 +252,75 @@ sl-tag[data-tag="crash-context"]::part(base) {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   z-index: 10;
 }
+
+/* ── Tablet (≤ 1024px) ───────────────────────────────────── */
+@media (max-width: 1024px) {
+  #header {
+    height: auto;
+    min-height: 56px;
+    flex-wrap: wrap;
+    padding: 8px 16px;
+    gap: 8px;
+  }
+
+  #feature-panel {
+    --size: min(420px, 90vw);
+  }
+
+  #feature-panel::part(panel) {
+    right: 20px;
+  }
+}
+
+/* ── Mobile (≤ 640px) ────────────────────────────────────── */
+@media (max-width: 640px) {
+  #header {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 8px 12px;
+    gap: 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  #header::-webkit-scrollbar {
+    display: none;
+  }
+
+  .header-filter,
+  #btn-reset-filters {
+    flex-shrink: 0;
+  }
+
+  .map-overlay {
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    min-width: 0;
+    padding: 8px 12px;
+  }
+
+  .overlay-label {
+    font-size: 12px;
+  }
+
+  .overlay-count {
+    font-size: 12px;
+  }
+
+  .overlay-row-sub .overlay-label,
+  .overlay-row-sub .overlay-count {
+    font-size: 11px;
+  }
+
+  #feature-panel {
+    --size: 100%;
+  }
+
+  #feature-panel::part(panel) {
+    height: 80%;
+    top: 20%;
+    right: 0;
+    border-radius: 16px 16px 0 0;
+  }
+}
