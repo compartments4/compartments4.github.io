@@ -319,9 +319,7 @@ function addHeatmapLayer({
 
 function addLayers() {
 
-    // Road labels
-    addSource('labels', 'labels.geojson');
-    addSymbolLayer({ layerId: 'labels-text', sourceId: 'labels', property: 'name', placement: 'point', size: 11, color: '#ffffff', haloColor: '#143542', haloWidth: 2 });
+    
 
     // Boundaries
     addSource('gba-boundary', 'gba-boundary.geojson');
@@ -414,8 +412,15 @@ function addLayers() {
     });
     map.on('mouseenter', 'proposed-locations-polygon', () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', 'proposed-locations-polygon', () => { map.getCanvas().style.cursor = ''; });
-}
 
+ // Road labels
+    addSource('labels', 'labels.geojson');
+    addSymbolLayer({ layerId: 'labels-text', sourceId: 'labels', property: 'name', placement: 'point', size: 12, color: '#000000', haloColor: '#d5e655', haloWidth: 4 });
+
+
+
+  }
+   
 //#endregion
 
 
@@ -859,11 +864,13 @@ function countLayer(sourceId, layerId, extraFilter) {
 }
 
 function updateOverlayStats() {
-  document.getElementById('stat-pl').textContent  = countLayer('proposed-locations',    'proposed-locations-polygon');
-  document.getElementById('stat-bs').textContent  = countLayer('blackspots',             'blackspots-polygon');
-  document.getElementById('stat-jd').textContent  = countLayer('junctions-development', 'junctions-development-points');
-  document.getElementById('stat-s75').textContent = countLayer('junctions-development', 'junctions-development-points', ['==', ['get', 'category'],    'Suraksha 75']);
-  document.getElementById('stat-f15').textContent = countLayer('junctions-development', 'junctions-development-points', ['==', ['get', 'Grant Name'], '15th Finance']);
+  document.getElementById('stat-pl').textContent    = countLayer('proposed-locations', 'proposed-locations-polygon');
+  document.getElementById('stat-pl-bs').textContent = countLayer('proposed-locations', 'proposed-locations-polygon', ['==', ['get', 'type'], 'blackspot']);
+  document.getElementById('stat-pl-jd').textContent = countLayer('proposed-locations', 'proposed-locations-polygon', ['==', ['get', 'type'], 'junction']);
+  document.getElementById('stat-bs').textContent    = countLayer('blackspots',             'blackspots-polygon');
+  document.getElementById('stat-jd').textContent    = countLayer('junctions-development', 'junctions-development-points');
+  document.getElementById('stat-s75').textContent   = countLayer('junctions-development', 'junctions-development-points', ['==', ['get', 'category'],    'Suraksha 75']);
+  document.getElementById('stat-f15').textContent   = countLayer('junctions-development', 'junctions-development-points', ['==', ['get', 'Grant Name'], '15th Finance']);
 }
 
 //#endregion
