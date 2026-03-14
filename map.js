@@ -178,6 +178,55 @@ function addLineLayer({
 }
 
 /**
+ * Adds a symbol (text label) layer.
+ *
+ * @param {Object} options
+ * @param {string}  options.layerId        Unique layer ID
+ * @param {string}  options.sourceId       Source ID registered with addSource()
+ * @param {string}  [options.property]     Feature property to use as label text  (default: 'name')
+ * @param {string}  [options.placement]    'point' | 'line' | 'line-center'       (default: 'line')
+ * @param {number}  [options.size]         Font size in px                         (default: 12)
+ * @param {string}  [options.color]        Text colour                             (default: '#ffffff')
+ * @param {string}  [options.haloColor]    Halo colour                             (default: '#000000')
+ * @param {number}  [options.haloWidth]    Halo width in px                        (default: 1.5)
+ * @param {number}  [options.minzoom]      Minimum zoom to show labels             (default: undefined)
+ * @param {string}  [options.before]       Insert below this layer ID
+ */
+function addSymbolLayer({
+  layerId,
+  sourceId,
+  property    = 'name',
+  placement   = 'line',
+  size        = 12,
+  color       = '#ffffff',
+  haloColor   = '#000000',
+  haloWidth   = 1.5,
+  minzoom     = undefined,
+  before      = undefined
+} = {}) {
+  if (map.getLayer(layerId)) return;
+  const layer = {
+    id:     layerId,
+    type:   'symbol',
+    source: sourceId,
+    layout: {
+      'symbol-placement': placement,
+      'text-field':       ['get', property],
+      'text-font':        ['Open Sans Regular'],
+      'text-size':        size,
+      'text-max-angle':   30,
+    },
+    paint: {
+      'text-color':       color,
+      'text-halo-color':  haloColor,
+      'text-halo-width':  haloWidth,
+    }
+  };
+  if (minzoom !== undefined) layer.minzoom = minzoom;
+  map.addLayer(layer, before);
+}
+
+/**
  * Adds a heatmap layer.
  *
  * @param {Object}  options
@@ -269,6 +318,10 @@ function addHeatmapLayer({
 
 
 function addLayers() {
+
+    // Road labels
+    addSource('labels', 'labels.geojson');
+    addSymbolLayer({ layerId: 'labels-text', sourceId: 'labels', property: 'name', placement: 'line', size: 11, color: '#ffffff', haloColor: '#143542', haloWidth: 2 });
 
     // Boundaries
     addSource('gba-boundary', 'gba-boundary.geojson');
