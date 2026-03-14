@@ -1,0 +1,101 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #f4f5f7;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+
+.detail-header {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 24px;
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.detail-header-titles h1 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;
+  line-height: 1.3;
+}
+
+.detail-header-titles p {
+  font-size: 13px;
+  color: #888;
+  margin-top: 2px;
+}
+
+/* ── Two-column layout ──────────────────────────────────── */
+
+.detail-layout {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.detail-left {
+  width: 420px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  background: #fff;
+  border-right: 1px solid #e2e8f0;
+  padding: 24px 24px 40px;
+}
+
+.detail-right {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Right-side sections ────────────────────────────────── */
+
+.detail-section {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.detail-section-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fafafa;
+}
+
+.detail-section-header h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.detail-section-body {
+  padding: 20px;
+  min-height: 140px;
+}
+
+/* ── Reuse panel classes from ../../style.css ───────────── */
+
+/* Override panel-carousel margin for left column context */
+sl-carousel.panel-carousel {
+  margin-bottom: 20px;
+}

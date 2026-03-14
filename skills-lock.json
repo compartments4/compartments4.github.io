@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "skills": {
+    "maplibre-mapbox-migration": {
+      "source": "maplibre/maplibre-agent-skills",
+      "sourceType": "github",
+      "computedHash": "68ee7fc75411de2da022a908bd5f2f77eaa6419870c79c7a1d3fc3dd5d891967"
+    },
+    "maplibre-pmtiles-patterns": {
+      "source": "maplibre/maplibre-agent-skills",
+      "sourceType": "github",
+      "computedHash": "72b366459120241717da08dfe0b5746c80dc1b901739277aabd19b35708e3931"
+    },
+    "maplibre-tile-sources": {
+      "source": "maplibre/maplibre-agent-skills",
+      "sourceType": "github",
+      "computedHash": "e51e45c3a8dc4fd85aaa9ef0e322cdd4e5f7a856c0c8d04a84bd654816e7a3a9"
+    },
+    "webawesome": {
+      "source": "/Users/nikhilagudipati/Desktop/Project Intersect/The City Map/02. Github/node_modules/@awesome.me/webawesome/dist/skills/webawesome",
+      "sourceType": "local",
+      "computedHash": "f46ee156842200187135f7c1b0478c14ee3d1bc41a4f4d810f8c6f0651b4801f"
+    }
+  }
+}

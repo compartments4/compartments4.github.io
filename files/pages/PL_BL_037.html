@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>PL_BL_037 — Hosa Road Junction</title>
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css" />
+        <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js"></script>
+
+        <link rel="stylesheet" href="../../style.css" />
+        <link rel="stylesheet" href="page.css" />
+
+    </head>
+
+    <body>
+
+        <header class="detail-header">
+            <sl-button href="../../index.html" size="small" circle>
+                <sl-icon name="arrow-left"></sl-icon>
+            </sl-button>
+            <div class="detail-header-titles">
+                <h1>Hosa Road Junction</h1>
+                <p>Naganathapura Junction, Hosur Main Road.</p>
+            </div>
+        </header>
+
+        <div class="detail-layout">
+
+            <!-- Left: same info as panel -->
+            <aside class="detail-left">
+
+                <div class="panel-header-tags">
+                    <sl-tag size="small" data-tag="type">blackspot</sl-tag>
+                    <sl-tag size="small" data-tag="theme">High Pedestrian Fatality</sl-tag>
+                </div>
+
+                <div class="panel-fields">
+                    <div class="panel-row">
+                        <span class="panel-label">ID</span>
+                        <span class="panel-value">PL_BL_037</span>
+                    </div>
+                    <div class="panel-row">
+                        <span class="panel-label">Size</span>
+                        <span class="panel-value">500m</span>
+                    </div>
+                    <div class="panel-row">
+                        <span class="panel-label">Hierarchy</span>
+                        <span class="panel-value">Arterial</span>
+                    </div>
+                </div>
+
+                <sl-carousel class="panel-carousel" id="page-carousel" navigation pagination loop mouse-dragging></sl-carousel>
+
+                <div class="panel-fields">
+                    <div class="panel-row">
+                        <span class="panel-label">Crash Points</span>
+                        <span class="panel-value">8</span>
+                    </div>
+                    <div class="panel-row">
+                        <span class="panel-label">Crash Type</span>
+                        <div class="panel-tags">
+                            <sl-tag size="small" data-tag="crash-type">Hit Pedestrian</sl-tag>
+                            <sl-tag size="small" data-tag="crash-type">Hit from Side</sl-tag>
+                        </div>
+                    </div>
+                    <div class="panel-row">
+                        <span class="panel-label">Crash Context</span>
+                        <div class="panel-tags">
+                            <sl-tag size="small" data-tag="crash-context">Bus Stop</sl-tag>
+                            <sl-tag size="small" data-tag="crash-context">Intersection</sl-tag>
+                        </div>
+                    </div>
+                </div>
+
+            </aside>
+
+            <!-- Right: data sections -->
+            <section class="detail-right">
+
+                <div class="detail-section">
+                    <div class="detail-section-header">
+                        <h2>Audit Data</h2>
+                    </div>
+                    <div class="detail-section-body"></div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-header">
+                        <h2>Countermeasures</h2>
+                    </div>
+                    <div class="detail-section-body"></div>
+                </div>
+
+            </section>
+
+        </div>
+
+        <script>
+            // Probe-load carousel images
+            const carousel = document.getElementById('page-carousel');
+            const base = '../media/proposed-locations/PL_BL_037/PL_BL_037';
+
+            const probeImage = (idx) => {
+                const img = new Image();
+                img.onload = () => {
+                    const item = document.createElement('sl-carousel-item');
+                    item.appendChild(img);
+                    carousel.appendChild(item);
+                    probeImage(idx + 1);
+                };
+                img.src = `${base}_${idx}.png`;
+            };
+
+            probeImage(1);
+        </script>
+
+    </body>
+
+</html>
