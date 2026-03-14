@@ -885,7 +885,7 @@ map.on('load', async () => {
     title:        'Layers',
     customLabels: layerLabels,
   });
-  map.addControl(layersControl, 'bottom-left');
+  map.addControl(layersControl, 'top-left');
   layersControl.buildPanel(); // 'load' already fired; populate panel manually
 
   addFilters();
