@@ -321,7 +321,7 @@ function addLayers() {
 
     // Road labels
     addSource('labels', 'labels.geojson');
-    addSymbolLayer({ layerId: 'labels-text', sourceId: 'labels', property: 'name', placement: 'line', size: 11, color: '#ffffff', haloColor: '#143542', haloWidth: 2 });
+    addSymbolLayer({ layerId: 'labels-text', sourceId: 'labels', property: 'name', placement: 'point', size: 11, color: '#ffffff', haloColor: '#143542', haloWidth: 2 });
 
     // Boundaries
     addSource('gba-boundary', 'gba-boundary.geojson');
