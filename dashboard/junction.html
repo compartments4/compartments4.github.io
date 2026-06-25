@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>Junction Detail</title>
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css" />
+        <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js"></script>
+
+        <link rel="stylesheet" href="style.css" />
+        <link rel="stylesheet" href="page.css" />
+
+    </head>
+
+    <body>
+
+        <header class="detail-header">
+            <sl-button href="index.html" size="small" circle>
+                <sl-icon name="arrow-left"></sl-icon>
+            </sl-button>
+            <div class="detail-header-titles">
+                <h1 id="detail-title"></h1>
+            </div>
+        </header>
+
+        <div class="detail-layout">
+
+            <!-- Left: same info as panel -->
+            <aside class="detail-left">
+
+                <div class="panel-header-tags" id="panel-header-tags">
+                    <sl-tag id="panel-tag-theme" size="small" data-tag="theme"></sl-tag>
+                </div>
+
+                <div class="panel-fields">
+                    <div class="panel-row" id="panel-row-id">
+                        <span class="panel-label">ID</span>
+                        <span class="panel-value" id="panel-val-id"></span>
+                    </div>
+                    <div class="panel-row" id="panel-row-hierarchy">
+                        <span class="panel-label">Hierarchy</span>
+                        <span class="panel-value" id="panel-val-hierarchy"></span>
+                    </div>
+                </div>
+
+                <sl-carousel class="panel-carousel" id="panel-carousel" navigation pagination loop mouse-dragging></sl-carousel>
+
+                <div class="panel-fields" id="panel-crash-section">
+                    <div class="panel-row" id="panel-row-crash-count">
+                        <span class="panel-label">Crash Points</span>
+                        <span class="panel-value" id="panel-val-crash-count"></span>
+                    </div>
+                    <div class="panel-row" id="panel-row-crash-type">
+                        <span class="panel-label">Crash Type</span>
+                        <div class="panel-tags" id="panel-val-crash-type"></div>
+                    </div>
+                    <div class="panel-row" id="panel-row-crash-context">
+                        <span class="panel-label">Crash Context</span>
+                        <div class="panel-tags" id="panel-val-crash-context"></div>
+                    </div>
+                </div>
+
+            </aside>
+
+            <!-- Right: data sections -->
+            <section class="detail-right">
+
+                <div class="detail-section">
+                    <div class="detail-section-header">
+                        <h2>Audit Data</h2>
+                    </div>
+                    <div class="detail-section-body" id="audit-data-body"></div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-header">
+                        <h2>Countermeasures</h2>
+                    </div>
+                    <div class="detail-section-body">
+                        <p style="color:#888;">Coming soon</p>
+                    </div>
+                </div>
+
+            </section>
+
+        </div>
+
+        <script src="panel-shared.js"></script>
+        <script>
+            const AUDIT_FIELDS = [
+                ['footpath', 'Footpath'], ['refuge_islands', 'Refuge Islands'], ['signals', 'Signals'],
+                ['cctv', 'CCTV'], ['vehicular_light', 'Vehicular light'], ['lane_marking', 'Lane Marking'],
+                ['pedestrian_crossing', 'Pedestrian Crossing'], ['median_island', 'Median Island'],
+                ['table_top', 'Table top'], ['landscape', 'Landscape'], ['cat_eyes', 'Cat eyes'],
+                ['traffic_police_chowk', 'Traffic police chowk'], ['street_furniture', 'Street furniture'],
+                ['median', 'Median'], ['pavers', 'Pavers'], ['tactile_pavers', 'Tactile pavers'],
+                ['rumble_strips', 'Rumble strips'], ['pedestrian_light', 'Pedestrian light'],
+                ['signage', 'Signage'], ['pelican_signals', 'Pelican signals'],
+                ['bus_stop_shifting', 'Shifting of bus stops'], ['autobays', 'Autobays'],
+                ['cycle_track', 'Cycle track'], ['pickup_dropoff', 'Pick up and drop off'],
+                ['pedestrian_only_zone', 'Pedestrian only zone'], ['tree_pits', 'Tree pits'],
+                ['bollards', 'Bollards'],
+            ];
+
+            /**
+             * categories.csv has one column per category, with each row holding the
+             * next audit-field key for that category (ragged — shorter categories
+             * leave trailing cells blank). Returns categories in header column order:
+             * [{ name: 'Pedestrian Infrastructure', keys: ['footpath', ...] }, ...]
+             */
+            function parseCategoriesCsv(text) {
+                const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+                const names = parseCsvLine(lines[0]);
+                const grouped = names.map(() => []);
+                lines.slice(1).forEach(line => {
+                    parseCsvLine(line).forEach((cell, i) => {
+                        const v = cell.trim();
+                        if (v) grouped[i].push(v);
+                    });
+                });
+                return names.map((name, i) => ({ name, keys: grouped[i] }));
+            }
+
+            async function init() {
+                const id = new URLSearchParams(location.search).get('id');
+                const [junctionsRes, categoriesRes] = await Promise.all([
+                    fetch('./datasets/175-junctions.csv'),
+                    fetch('./datasets/categories.csv'),
+                ]);
+                const rows = parseCsv(await junctionsRes.text());
+                const categories = parseCategoriesCsv(await categoriesRes.text());
+
+                const matches = rows.filter(r => r.j_code === id);
+                if (matches.length > 1) {
+                    console.warn(`junction.html: multiple rows share j_code "${id}"; using the first.`);
+                }
+                const row = matches[0];
+
+                if (!row) {
+                    document.getElementById('detail-title').textContent = 'Junction not found';
+                    document.querySelector('.detail-layout').innerHTML =
+                        `<p style="padding:24px;color:#888;">No junction found for ID "${id ?? ''}".</p>`;
+                    return;
+                }
+
+                const { theme, j_name, j_code, road_hierarchy, lat, long, crash_count, crash_type, crash_context } = row;
+                const hierarchy = formatHierarchy(road_hierarchy);
+                const name = j_name ? j_name.split(',').map(s => s.trim()).filter(s => s && s !== 'NULL').join(', ') : null;
+
+                document.title = name || j_code || 'Junction Detail';
+                document.getElementById('detail-title').textContent = name || j_code || '';
+
+                setTag('panel-tag-theme', theme);
+                document.getElementById('panel-header-tags').hidden = !theme;
+
+                setRow('panel-row-id', 'panel-val-id', j_code);
+                setRow('panel-row-hierarchy', 'panel-val-hierarchy', hierarchy);
+
+                const carousel = document.getElementById('panel-carousel');
+                carousel.innerHTML = '';
+                buildStreetViewCarousel(parseFloat(lat), parseFloat(long), carousel);
+
+                document.getElementById('panel-crash-section').hidden = crash_count == null && !crash_type && !crash_context;
+                setRow('panel-row-crash-count', 'panel-val-crash-count', crash_count != null ? String(crash_count) : null);
+                setTagRow('panel-row-crash-type', 'panel-val-crash-type', crash_type, 'crash-type');
+                setTagRow('panel-row-crash-context', 'panel-val-crash-context', crash_context, 'crash-context');
+
+                const labelByKey = new Map(AUDIT_FIELDS);
+                const auditBody = document.getElementById('audit-data-body');
+                auditBody.innerHTML = `<div class="audit-categories">${categories.map(({ name, keys }) => `
+                    <div class="audit-category">
+                        <h3 class="audit-category-title">${name}</h3>
+                        ${keys.map(key => {
+                            const label = labelByKey.get(key) ?? key;
+                            const isYes = row[key] === 'Yes';
+                            return `<div class="audit-row">
+                                <span class="audit-label">${label}</span>
+                                <span class="audit-badge ${isYes ? 'yes' : 'no'}">${isYes ? 'Yes' : 'No'}</span>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                `).join('')}</div>`;
+            }
+
+            init();
+        </script>
+
+    </body>
+
+</html>

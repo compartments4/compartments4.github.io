@@ -22,6 +22,56 @@ map.addControl(new maplibregl.FullscreenControl(), 'top-right');
 //#region LAYERS
 
 /**
+ * Converts a parsed CSV row with lat/long columns into a GeoJSON Point feature.
+ * Every other column passes through as-is as a property.
+ */
+function csvRowToFeature(row) {
+  const { lat, long, ...rest } = row;
+  return {
+    type: 'Feature',
+    geometry: { type: 'Point', coordinates: [parseFloat(long), parseFloat(lat)] },
+    properties: { ...rest }
+  };
+}
+
+/**
+ * Fetches a CSV file from ./datasets/, converts it to a GeoJSON Point
+ * FeatureCollection, and registers it as a map source via a Blob URL —
+ * so it behaves like a normal hosted GeoJSON source for fetch()-based
+ * helpers elsewhere in this file (e.g. populateFilter's source.serialize().data).
+ *
+ * Also pre-populates _sourceCache directly, since cacheSource() can't parse
+ * CSV and never looks at the registered source anyway.
+ */
+async function loadCsvAsGeoJsonSource(sourceId, filename) {
+  const res  = await fetch(`./datasets/${filename}`);
+  const text = await res.text();
+  const features = parseCsv(text).map(csvRowToFeature);
+
+  const blobUrl = URL.createObjectURL(
+    new Blob([JSON.stringify({ type: 'FeatureCollection', features })], { type: 'application/json' })
+  );
+  if (!map.getSource(sourceId)) map.addSource(sourceId, { type: 'geojson', data: blobUrl });
+
+  _sourceCache[sourceId] = features;
+}
+
+// Bangalore's latitude span (~12.85-13.10°) varies cos(lat) by <0.1%, so a
+// single fixed reference latitude (the map's center, matching the
+// maplibregl.Map constructor) is an acceptable approximation for true-scale
+// circle sizing without needing a per-feature ['get','lat'] expression.
+const MAP_CENTER_LAT = 12.97;
+
+/**
+ * Builds a MapLibre circle-radius expression that renders a circle at a
+ * true real-world diameter (in meters) regardless of zoom level.
+ */
+function metersToPixelsRadiusExpr(diameterMeters, refLat = MAP_CENTER_LAT) {
+  const radiusAtZoom20 = (diameterMeters / 2) / 0.075 / Math.cos(refLat * Math.PI / 180);
+  return ['interpolate', ['exponential', 2], ['zoom'], 0, 0, 20, radiusAtZoom20];
+}
+
+/**
  * Registers a GeoJSON file from ./datasets/ as a map source.
  * Safe to call multiple times with the same sourceId — duplicate is skipped.
  *
@@ -317,7 +367,7 @@ function addHeatmapLayer({
   // addPointLayer({ layerId: 'events-points', sourceId: 'events', radius: 4, opacity: 0.7 });
 
 
-function addLayers() {
+async function addLayers() {
 
     
 
@@ -325,11 +375,11 @@ function addLayers() {
     addSource('gba-boundary', 'gba-boundary.geojson');
     addLineLayer({ layerId: 'gba-boundary-line', sourceId: 'gba-boundary', color: '#fff', width: 1, dash: [2, 3] });
 
-    addSource('gba-zones', 'gba-zones.geojson');
-    addLineLayer({ layerId: 'gba-zones-line', sourceId: 'gba-zones', color: '#ffffff82', width: 1 });
+    addSource('gba-corporation', 'gba-corporation.geojson');
+    addLineLayer({ layerId: 'gba-corporation-line', sourceId: 'gba-corporation', color: '#ffffff82', width: 0.6 });
 
-     addSource('gba-wards', 'gba-wards.geojson');
-    addLineLayer({ layerId: 'gba-wards-line', sourceId: 'gba-wards', color: '#ffffff82', width: 0.1 });
+    // addSource('gba-wards', 'gba-wards.geojson');
+    //addLineLayer({ layerId: 'gba-wards-line', sourceId: 'gba-wards', color: '#ffffff82', width: 0.1 });
 
     
     
@@ -365,15 +415,26 @@ function addLayers() {
     addSource('blackspots', 'blackspots.geojson');
     addPolygonLayer({layerId:     'blackspots-polygon',
       sourceId:    'blackspots',
-      color:       '#ff00004e',   // fill colour
-      opacity:     0.2,         // 0–1
+      // Red gradient fill driven by KSI (Karnataka Severity Index) — higher
+      // severity blackspots render darker red. Stops span the observed
+      // Karnataka_SI range (25-272) using a 5-step ColorBrewer "Reds" ramp.
+      color: '#f86666'
+      /*[
+        'interpolate', ['linear'], ['get', 'Karnataka_SI'],
+        25,  '#fee5d9',
+        87,  '#fcae91',
+        149, '#fb6a4a',
+        210, '#de2d26',
+        272, '#a50f15'
+      ]*/,
+      opacity:     0.4,         // 0–1
       strokeColor: '#ff0000',   // outline colour
-      strokeWidth: 6           // px
+      strokeWidth: 2           // px
     });
     addLayerInteractivity('blackspots-polygon', [
-      { attr: 'location', label: 'Location' },
-      { attr: 'junction id', label: 'Junction IDs' },
-      { attr: 'traffic_ps',  label: 'Traffic Police Station' }
+      { attr: 'Karnataka_SI', label: 'Severity Index (KSI)' },
+      { attr: 'Crash_Count', label: 'Crash Count' }
+
     ]);
 
     //Suraksha 75 and 15th Finance Junctions
@@ -401,17 +462,19 @@ function addLayers() {
         { attr: 'Year of grant',  label: 'Grant Year' }
       ]);
 
-          //177 Locations
-    addSource('proposed-locations', 'proposed-locations.geojson');
-    addPolygonLayer({layerId:     'proposed-locations-polygon',
+          //175 Junctions
+    await loadCsvAsGeoJsonSource('proposed-locations', '175-junctions.csv');
+    addPointLayer({
+      layerId:     'proposed-locations-points',
       sourceId:    'proposed-locations',
-      color:       '#ffea004e',   // fill colour
-      opacity:     0.2,         // 0–1
-      strokeColor: '#d9ff00',   // outline colour
-      strokeWidth: 2.5           // px
+      color:       '#ffea0080',
+      strokeColor: '#d9ff00',
+      radius:      metersToPixelsRadiusExpr(150),   // true 150m diameter
+      strokeWidth: 2.5,
+      opacity:     0.8
     });
-    map.on('mouseenter', 'proposed-locations-polygon', () => { map.getCanvas().style.cursor = 'pointer'; });
-    map.on('mouseleave', 'proposed-locations-polygon', () => { map.getCanvas().style.cursor = ''; });
+    map.on('mouseenter', 'proposed-locations-points', () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'proposed-locations-points', () => { map.getCanvas().style.cursor = ''; });
 
  // Road labels
     addSource('labels', 'labels.geojson');
@@ -439,7 +502,7 @@ function addLayers() {
  * setupFilter('filter-category', 'junctions-development-points', 'category');
  *
  * // Multiple layers — same filter applied to all
- * setupFilter('filter-ward', ['blackspots-polygon', 'junctions-development-points', 'proposed-locations-polygon'], 'ward');
+ * setupFilter('filter-ward', ['blackspots-polygon', 'junctions-development-points', 'proposed-locations-points'], 'ward');
  */
 /**
  * Resolves layer IDs to their GeoJSON source URLs, fetches each source, and
@@ -453,7 +516,7 @@ function addLayers() {
  * @param {string}   property    feature property to collect values from
  *
  * @example
- * populateFilter('filter-junction', ['junctions-development-points', 'proposed-locations-polygon'], 'j_code');
+ * populateFilter('filter-junction', ['junctions-development-points', 'proposed-locations-points'], 'j_code');
  */
 async function populateFilter(dropdownId, layerIds, property) {
   const dropdown = document.getElementById(dropdownId);
@@ -648,8 +711,8 @@ function resetAllFilters() {
  * Called once inside map.on('load').
  */
 function addFilters() {
-  const allLayers = ['blackspots-polygon', 'junctions-development-points', 'gba-wards-line', 'gba-zones-line', 'proposed-locations-polygon'];
-  const junctionLayers = ['blackspots-polygon', 'junctions-development-points', 'proposed-locations-polygon'];
+  const allLayers = ['blackspots-polygon', 'junctions-development-points', 'gba-wards-line', 'gba-zones-line', 'proposed-locations-points'];
+  const junctionLayers = ['blackspots-polygon', 'junctions-development-points', 'proposed-locations-points'];
 
   addDropdownSearch('filter-corporation');
   setupFilter('filter-corporation',    allLayers,                                                   'Corporation');
@@ -660,6 +723,10 @@ function addFilters() {
   addDropdownSearch('filter-junction');
   populateFilter('filter-junction', junctionLayers, 'j_code');
   setupFilter('filter-junction',    junctionLayers,  'j_code');
+
+  addDropdownSearch('filter-theme');
+  populateFilter('filter-theme', ['proposed-locations-points'], 'theme');
+  setupFilter('filter-theme',    ['proposed-locations-points'], 'theme');
 
   document.getElementById('btn-reset-filters')?.addEventListener('click', resetAllFilters);
 }
@@ -678,7 +745,7 @@ function addFilters() {
 const layerLabels = {
   'blackspots-polygon':            'Blackspots',
   'junctions-development-points':  'Suraksha 75 + 15th Finance',
-  'proposed-locations-polygon':  '177 Priority Locations',
+  'proposed-locations-points':  '175 Junctions',
 };
 
 //#endregion
@@ -716,8 +783,8 @@ function addLayerInteractivity(layerId, attributes = []) {
 
 // Single click handler — queryRenderedFeatures returns features topmost-first.
 map.on('click', (e) => {
-  // proposed-locations-polygon → side panel instead of popup
-  const panelFeats = map.queryRenderedFeatures(e.point, { layers: ['proposed-locations-polygon'] });
+  // proposed-locations-points → side panel instead of popup
+  const panelFeats = map.queryRenderedFeatures(e.point, { layers: ['proposed-locations-points'] });
   if (panelFeats.length) { openFeaturePanel(panelFeats[0]); return; }
 
   // Close panel if open and clicking elsewhere on the map
@@ -754,78 +821,26 @@ map.on('click', (e) => {
     .addTo(map);
 });
 
-const formatHierarchy = (val) => {
-  if (!val) return null;
-  return val.split(',').map(s => {
-    const t = s.trim();
-    if (t === 'ARTERIAL') return 'Arterial';
-    if (t === 'SUB_ARTERIAL') return 'Sub-Arterial';
-    return t;
-  }).join(', ');
-};
-
-const makeTags = (val, tagName) => {
-  if (!val) return '';
-  return val.split(',').map(s => s.trim()).filter(Boolean)
-    .map(s => `<sl-tag size="small" data-tag="${tagName}">${s}</sl-tag>`).join('');
-};
-
-function setTag(id, value) {
-  const el = document.getElementById(id);
-  el.hidden = !value;
-  if (value) el.textContent = value;
-}
-
-function setRow(rowId, valId, value) {
-  const row = document.getElementById(rowId);
-  const empty = value == null || value === '';
-  row.hidden = empty;
-  if (!empty) document.getElementById(valId).textContent = value;
-}
-
-function setTagRow(rowId, valId, value, tagName) {
-  const row = document.getElementById(rowId);
-  row.hidden = !value;
-  if (value) document.getElementById(valId).innerHTML = makeTags(value, tagName);
-}
-
-function buildCarousel(pl_id, carousel) {
-  const base = `files/media/proposed-locations/${pl_id}/${pl_id}`;
-
-  const probeImage = (idx) => {
-    const img = new Image();
-    img.onload = () => {
-      const item = document.createElement('sl-carousel-item');
-      item.appendChild(img);
-      carousel.appendChild(item);
-      probeImage(idx + 1);
-    };
-    img.src = `${base}_${idx}.png`;
-  };
-
-  probeImage(1);
-}
-
 function openFeaturePanel(feature) {
   const props = feature.properties;
-  const { theme, type, j_name, pl_id, size, road_hierarchy, crash_count, crash_type, crash_context } = props;
+  const { theme, j_name, j_code, road_hierarchy, crash_count, crash_type, crash_context } = props;
   const hierarchy = formatHierarchy(road_hierarchy);
   const name = j_name ? j_name.split(',').map(s => s.trim()).filter(s => s && s !== 'NULL').join(', ') : null;
 
   // Header tags
-  setTag('panel-tag-type',  type);
   setTag('panel-tag-theme', theme);
-  document.getElementById('panel-header-tags').hidden = !type && !theme;
+  document.getElementById('panel-header-tags').hidden = !theme;
 
   // Fields
-  setRow('panel-row-id',        'panel-val-id',        pl_id);
-  setRow('panel-row-size',      'panel-val-size',      size != null ? `${size}m` : null);
+  setRow('panel-row-id',        'panel-val-id',        j_code);
   setRow('panel-row-hierarchy', 'panel-val-hierarchy', hierarchy);
 
   // Carousel
   const carousel = document.getElementById('panel-carousel');
   carousel.innerHTML = '';
-  buildCarousel(pl_id, carousel);
+  // buildCarousel(j_code, carousel);
+  const [lng, lat] = feature.geometry.coordinates;
+  buildStreetViewCarousel(lat, lng, carousel);
 
   // Crash section
   document.getElementById('panel-crash-section').hidden = crash_count == null && !crash_type && !crash_context;
@@ -833,10 +848,10 @@ function openFeaturePanel(feature) {
   setTagRow('panel-row-crash-type',    'panel-val-crash-type',    crash_type,    'crash-type');
   setTagRow('panel-row-crash-context', 'panel-val-crash-context', crash_context, 'crash-context');
 
-  document.getElementById('panel-view-details').href = `files/pages/${pl_id}.html`;
+  document.getElementById('panel-view-details').href = `junction.html?id=${j_code}`;
 
   const drawer = document.getElementById('feature-panel');
-  drawer.label = name || pl_id || '';
+  drawer.label = name || j_code || '';
   drawer.show();
 }
 
@@ -864,9 +879,7 @@ function countLayer(sourceId, layerId, extraFilter) {
 }
 
 function updateOverlayStats() {
-  document.getElementById('stat-pl').textContent    = countLayer('proposed-locations', 'proposed-locations-polygon');
-  document.getElementById('stat-pl-bs').textContent = countLayer('proposed-locations', 'proposed-locations-polygon', ['==', ['get', 'type'], 'blackspot']);
-  document.getElementById('stat-pl-jd').textContent = countLayer('proposed-locations', 'proposed-locations-polygon', ['==', ['get', 'type'], 'junction']);
+  document.getElementById('stat-pl').textContent = countLayer('proposed-locations', 'proposed-locations-points');
   document.getElementById('stat-bs').textContent    = countLayer('blackspots',             'blackspots-polygon');
   document.getElementById('stat-jd').textContent    = countLayer('junctions-development', 'junctions-development-points');
   document.getElementById('stat-s75').textContent   = countLayer('junctions-development', 'junctions-development-points', ['==', ['get', 'category'],    'Suraksha 75']);
@@ -879,7 +892,7 @@ function updateOverlayStats() {
 //#region MAP LOAD
 
 map.on('load', async () => {
-  addLayers();
+  await addLayers();
 
   const layersControl = new LayersControl({
     title:        'Layers',
@@ -891,7 +904,6 @@ map.on('load', async () => {
   addFilters();
 
   await Promise.all([
-    cacheSource('proposed-locations',    'proposed-locations.geojson'),
     cacheSource('blackspots',             'blackspots.geojson'),
     cacheSource('junctions-development', 'junctions-development.geojson'),
   ]);

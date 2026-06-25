@@ -3,3 +3,4 @@ node_modules/
 .agents/
 .claude/
 old/
+dashboard/datasets/land-use.geojson

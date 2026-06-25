@@ -10,7 +10,7 @@
 
         <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
         <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
-        <script src="libs/maplibre-gl-layers-control.js"></script>
+        <script src="../libs/maplibre-gl-layers-control.js"></script>
 
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css" />
         <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js"></script>
@@ -57,16 +57,11 @@
                 </sl-menu>
             </sl-dropdown>
 
-            <sl-dropdown class="header-filter">
+            <sl-dropdown class="header-filter" id="filter-theme" stay-open-on-select hoist distance="4">
                 <sl-button slot="trigger" caret>Theme</sl-button>
+                <sl-input placeholder="Search…" size="small" clearable></sl-input>
                 <sl-menu>
-                    <sl-menu-item>Speeding</sl-menu-item>
-                    <sl-menu-item>School Zone</sl-menu-item>
-                    <sl-menu-item>High Pedestrian Fatality</sl-menu-item>
-                    <sl-menu-item>Tactical Solutions</sl-menu-item>
-                    <sl-menu-item>Public Spaces</sl-menu-item>
-                    <sl-menu-item>Signages</sl-menu-item>
-                    
+                    <sl-menu-item value="all">All</sl-menu-item>
                 </sl-menu>
             </sl-dropdown>
 
@@ -98,15 +93,7 @@
                 <div class="overlay-row">
                     <span class="overlay-swatch swatch-pl"></span>
                     <span class="overlay-label">Priority Locations</span>
-                    <span class="overlay-count" id="stat-pl">177</span>
-                </div>
-                <div class="overlay-row overlay-row-sub">
-                    <span class="overlay-label">Blackspots</span>
-                    <span class="overlay-count" id="stat-pl-bs"></span>
-                </div>
-                <div class="overlay-row overlay-row-sub">
-                    <span class="overlay-label">Junctions</span>
-                    <span class="overlay-count" id="stat-pl-jd"></span>
+                    <span class="overlay-count" id="stat-pl">175</span>
                 </div>
                 <div class="overlay-row">
                     <span class="overlay-swatch swatch-bs"></span>
@@ -134,7 +121,6 @@
                 </sl-button>
                 <div id="feature-panel-content">
                     <div class="panel-header-tags" id="panel-header-tags">
-                        <sl-tag id="panel-tag-type"  size="small" data-tag="type"></sl-tag>
                         <sl-tag id="panel-tag-theme" size="small" data-tag="theme"></sl-tag>
                     </div>
                     <div class="panel-fields">
@@ -142,10 +128,7 @@
                             <span class="panel-label">ID</span>
                             <span class="panel-value" id="panel-val-id"></span>
                         </div>
-                        <div class="panel-row" id="panel-row-size">
-                            <span class="panel-label">Size</span>
-                            <span class="panel-value" id="panel-val-size"></span>
-                        </div>
+
                         <div class="panel-row" id="panel-row-hierarchy">
                             <span class="panel-label">Hierarchy</span>
                             <span class="panel-value" id="panel-val-hierarchy"></span>
@@ -170,6 +153,7 @@
             </sl-drawer>
         </div>
 
+        <script src="panel-shared.js"></script>
         <script src="map.js"></script>
 
     </body>

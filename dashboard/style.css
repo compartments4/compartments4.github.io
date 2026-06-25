@@ -180,6 +180,13 @@ sl-carousel.panel-carousel {
   margin-bottom: 16px;
 }
 
+sl-carousel.panel-carousel sl-carousel-item {
+  flex: 0 0 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 sl-carousel.panel-carousel sl-carousel-item img {
   width: 100%;
   height: 100%;
