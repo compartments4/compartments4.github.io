@@ -1,3 +1,15 @@
+:root {
+  --color-blue:       #1B4353;
+  --color-darkblue:       #143542;
+  --color-pink:      #F15C61;
+  --color-yellow: #E2C042;
+  --color-lightblue: #C7E8F3;
+  --color-highlightblue: #1ab6ea;
+  --color-chart-bg:#143542;
+
+  --color-white: #e6dcc9;
+
+}
 * {
   margin: 0;
   padding: 0;
