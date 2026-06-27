@@ -1,5 +1,8 @@
 //#region MAP SETUP
 
+// Same key already used by ./datasets/project_intersect.json for basemap tiles.
+const MAPTILER_API_KEY = 'yElyticxrpNA6aBtbkfY';
+
 const map = new maplibregl.Map({
   container: 'map',
   style: './datasets/project_intersect.json',
@@ -753,6 +756,24 @@ function addFilters() {
   document.getElementById('btn-reset-filters')?.addEventListener('click', resetAllFilters);
 }
 
+/**
+ * Adds MapTiler's geocoding control (real-world place/address search),
+ * reusing the same MapTiler API key already powering the basemap tiles in
+ * ./datasets/project_intersect.json. Mounted into #header-search instead of
+ * via map.addControl() so it sits in the filter header bar rather than as a
+ * floating map corner control.
+ */
+function setupMapSearch() {
+  const geocodingControl = new maptilerGeocoder.GeocodingControl({
+    apiKey: MAPTILER_API_KEY,
+    iconsBaseUrl: 'https://unpkg.com/@maptiler/geocoding-control@3.0.0/dist/icons/',
+    proximity: [{ type: 'map-center', minZoom: 8 }],
+    // Bangalore/Bengaluru metro area — keeps results scoped to the city.
+    bbox: [77.35, 12.70, 77.90, 13.25],
+  });
+  document.getElementById('header-search').appendChild(geocodingControl.onAdd(map));
+}
+
 //#endregion
 
 
@@ -926,6 +947,7 @@ map.on('load', async () => {
   layersControl.buildPanel(); // 'load' already fired; populate panel manually
 
   addFilters();
+  setupMapSearch();
 
   await Promise.all([
     cacheSource('blackspots',             'blackspots.geojson'),

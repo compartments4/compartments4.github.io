@@ -23,6 +23,16 @@ body {
   z-index: 10;
 }
 
+#header-search {
+  width: 280px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+#header-search > * {
+  width: 100%;
+}
+
 /* ── Header filter dropdowns ─────────────────────────────── */
 
 /* .header-filter sl-button::part(base) { background, border-color, color, font-size, font-weight, border-radius } */

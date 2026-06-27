@@ -11,6 +11,7 @@
         <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
         <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
         <script src="../libs/maplibre-gl-layers-control.js"></script>
+        <script src="https://unpkg.com/@maptiler/geocoding-control@3.0.0/dist/maplibregl.umd.js"></script>
 
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css" />
         <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js"></script>
@@ -22,6 +23,7 @@
     <body>
 
         <div id="header">
+
             <sl-dropdown class="header-filter" id="filter-corporation" stay-open-on-select hoist distance="4">
                 <sl-button slot="trigger" caret>Corporation</sl-button>
                 <sl-input placeholder="Search…" size="small" clearable></sl-input>
@@ -52,7 +54,6 @@
                     <sl-menu-item value="all">All</sl-menu-item>
                     <sl-divider></sl-divider>
                     <sl-menu-item type="checkbox" value="ARTERIAL">Arterial</sl-menu-item>
-                    <sl-menu-item type="checkbox" value="ARTERIAL,SUB_ARTERIAL">Arterial + Sub-Arterial</sl-menu-item>
                     <sl-menu-item type="checkbox" value="SUB_ARTERIAL">Sub-Arterial</sl-menu-item>
                 </sl-menu>
             </sl-dropdown>
@@ -73,14 +74,12 @@
                 </sl-menu>
             </sl-dropdown>
 
-            <sl-dropdown class="header-filter">
-                <sl-button slot="trigger">Low Investment High Impact</sl-button>
-            </sl-dropdown>
-
             <sl-button id="btn-reset-filters" variant="text" size="small">
                 <sl-icon slot="prefix" name="arrow-counterclockwise"></sl-icon>
                 Reset
             </sl-button>
+
+            <div id="header-search"></div>
         </div>
 
         <div id="map-wrap">
