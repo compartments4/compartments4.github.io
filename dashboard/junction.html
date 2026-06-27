@@ -45,6 +45,11 @@
                         <span class="panel-label">Hierarchy</span>
                         <span class="panel-value" id="panel-val-hierarchy"></span>
                     </div>
+
+                    <div class="panel-row" id="panel-row-budget">
+                        <span class="panel-label">Budget</span>
+                        <span class="panel-value" id="panel-val-budget"></span>
+                    </div>
                 </div>
 
                 <sl-carousel class="panel-carousel" id="panel-carousel" navigation pagination loop mouse-dragging></sl-carousel>
@@ -76,7 +81,7 @@
                     <div class="detail-section-body" id="audit-data-body"></div>
                 </div>
 
-                <div class="detail-section">
+                <div class="detail-section" id="countermeasures-section">
                     <div class="detail-section-header">
                         <h2>Countermeasures</h2>
                     </div>
@@ -147,8 +152,9 @@
                     return;
                 }
 
-                const { theme, j_name, j_code, road_hierarchy, lat, long, crash_count, crash_type, crash_context } = row;
+                const { theme, j_name, j_code, road_hierarchy, budget, lat, long, crash_count, crash_type, crash_context } = row;
                 const hierarchy = formatHierarchy(road_hierarchy);
+                const budgetCategory = classifyBudget(budget);
                 const name = j_name ? j_name.split(',').map(s => s.trim()).filter(s => s && s !== 'NULL').join(', ') : null;
 
                 document.title = name || j_code || 'Junction Detail';
@@ -159,6 +165,9 @@
 
                 setRow('panel-row-id', 'panel-val-id', j_code);
                 setRow('panel-row-hierarchy', 'panel-val-hierarchy', hierarchy);
+                setRow('panel-row-budget', 'panel-val-budget', budgetCategory);
+
+                document.getElementById('countermeasures-section').hidden = theme !== 'Crash';
 
                 const carousel = document.getElementById('panel-carousel');
                 carousel.innerHTML = '';

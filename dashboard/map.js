@@ -30,7 +30,8 @@ function csvRowToFeature(row) {
   return {
     type: 'Feature',
     geometry: { type: 'Point', coordinates: [parseFloat(long), parseFloat(lat)] },
-    properties: { ...rest }
+    // budget_category is derived for filtering/display; raw `budget` stays in `rest` untouched.
+    properties: { ...rest, budget_category: classifyBudget(row.budget) }
   };
 }
 
@@ -728,6 +729,10 @@ function addFilters() {
   populateFilter('filter-theme', ['proposed-locations-points'], 'theme');
   setupFilter('filter-theme',    ['proposed-locations-points'], 'theme');
 
+  addDropdownSearch('filter-budget');
+  populateFilter('filter-budget', ['proposed-locations-points'], 'budget_category');
+  setupFilter('filter-budget',    ['proposed-locations-points'], 'budget_category');
+
   document.getElementById('btn-reset-filters')?.addEventListener('click', resetAllFilters);
 }
 
@@ -823,7 +828,7 @@ map.on('click', (e) => {
 
 function openFeaturePanel(feature) {
   const props = feature.properties;
-  const { theme, j_name, j_code, road_hierarchy, crash_count, crash_type, crash_context } = props;
+  const { theme, j_name, j_code, road_hierarchy, budget_category, crash_count, crash_type, crash_context } = props;
   const hierarchy = formatHierarchy(road_hierarchy);
   const name = j_name ? j_name.split(',').map(s => s.trim()).filter(s => s && s !== 'NULL').join(', ') : null;
 
@@ -834,6 +839,7 @@ function openFeaturePanel(feature) {
   // Fields
   setRow('panel-row-id',        'panel-val-id',        j_code);
   setRow('panel-row-hierarchy', 'panel-val-hierarchy', hierarchy);
+  setRow('panel-row-budget',    'panel-val-budget',    budget_category);
 
   // Carousel
   const carousel = document.getElementById('panel-carousel');

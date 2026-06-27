@@ -65,6 +65,24 @@ const makeTags = (val, tagName) => {
     .map(s => `<sl-tag size="small" data-tag="${tagName}">${s}</sl-tag>`).join('');
 };
 
+/**
+ * Classifies a raw Indian-formatted rupee amount (e.g. "2,00,00,000") into a
+ * named budget tier. Stripping commas before parseFloat is sufficient —
+ * Indian digit grouping still yields the correct decimal value once commas
+ * are removed. Open-ended at both extremes; only the internal boundaries
+ * (10L/50L/1Cr) are strict cutoffs.
+ */
+function classifyBudget(budgetStr) {
+  if (!budgetStr) return null;
+  const amount = parseFloat(String(budgetStr).replace(/,/g, ''));
+  if (Number.isNaN(amount)) return null;
+  const LAKH = 100000, CRORE = 10000000;
+  if (amount < 10 * LAKH) return '< 10 lakhs';
+  if (amount < 50 * LAKH) return '10 - 49 lakhs';
+  if (amount < CRORE) return '50 lakhs - <1 crore';
+  return '1 - 5 crore';
+}
+
 function setTag(id, value) {
   const el = document.getElementById(id);
   el.hidden = !value;

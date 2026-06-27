@@ -65,14 +65,11 @@
                 </sl-menu>
             </sl-dropdown>
 
-            <sl-dropdown class="header-filter">
+            <sl-dropdown class="header-filter" id="filter-budget" stay-open-on-select hoist distance="4">
                 <sl-button slot="trigger" caret>Budget</sl-button>
+                <sl-input placeholder="Search…" size="small" clearable></sl-input>
                 <sl-menu>
-                    <sl-menu-item>< 10 lakhs</sl-menu-item>
-                    <sl-menu-item>10 - 50 lakhs</sl-menu-item>
-                    <sl-menu-item>50 - 100 lakhs</sl-menu-item>
-                    <sl-menu-item>< 1 crore</sl-menu-item>
-                    <sl-menu-item>1 - 5 Cr</sl-menu-item>
+                    <sl-menu-item value="all">All</sl-menu-item>
                 </sl-menu>
             </sl-dropdown>
 
@@ -132,6 +129,11 @@
                         <div class="panel-row" id="panel-row-hierarchy">
                             <span class="panel-label">Hierarchy</span>
                             <span class="panel-value" id="panel-val-hierarchy"></span>
+                        </div>
+
+                        <div class="panel-row" id="panel-row-budget">
+                            <span class="panel-label">Budget</span>
+                            <span class="panel-value" id="panel-val-budget"></span>
                         </div>
                     </div>
                     <sl-carousel class="panel-carousel" id="panel-carousel" navigation pagination loop mouse-dragging></sl-carousel>
