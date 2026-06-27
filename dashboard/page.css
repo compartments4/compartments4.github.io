@@ -78,6 +78,9 @@ body {
   padding: 14px 20px;
   border-bottom: 1px solid #e2e8f0;
   background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .detail-section-header h2 {
@@ -101,6 +104,11 @@ sl-carousel.panel-carousel {
 }
 
 /* ── Audit Data: category columns ──────────────────────── */
+
+#audit-data-body {
+  max-height: 360px;
+  overflow-y: auto;
+}
 
 .audit-categories {
   display: flex;
@@ -152,4 +160,77 @@ sl-carousel.panel-carousel {
 .audit-badge.no {
   background: #fdebea;
   color: #c0392b;
+}
+
+/* ── Countermeasures: scrollable table ─────────────────── */
+
+.countermeasure-table-wrap {
+  overflow: auto;
+  max-height: 360px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+#countermeasures-body-expanded .countermeasure-table-wrap {
+  max-height: 80vh;
+}
+
+.countermeasure-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 900px;
+  font-size: 13px;
+  table-layout: fixed;
+}
+
+.countermeasure-table th,
+.countermeasure-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  border-right: 1px solid #f0f0f0;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: break-word;
+}
+
+.countermeasure-table th:first-child,
+.countermeasure-table td:first-child,
+.countermeasure-table th:nth-child(2),
+.countermeasure-table td:nth-child(2) {
+  width: 100px;
+}
+
+.countermeasure-table th:not(:first-child):not(:nth-child(2)) {
+  width: 200px;
+}
+
+.countermeasure-table th:last-child,
+.countermeasure-table td:last-child {
+  border-right: none;
+}
+
+.countermeasure-table thead th {
+  position: sticky;
+  top: 0;
+  background: #fafafa;
+  font-weight: 600;
+  color: #333;
+  z-index: 1;
+}
+
+.countermeasure-table td:first-child,
+.countermeasure-table td:nth-child(2) {
+  font-weight: 500;
+  color: #333;
+}
+
+.countermeasure-list {
+  margin: 0;
+  padding-left: 16px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.countermeasure-list li {
+  margin-bottom: 4px;
 }

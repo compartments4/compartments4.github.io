@@ -49,6 +49,18 @@ function parseCsv(text) {
 
 //#region FORMATTING + DOM HELPERS
 
+// Friendly display labels for theme values — used for the Theme filter
+// dropdown and the theme tags, while filtering/matching still uses the raw
+// underlying value (School/Commercial/Transit/Crash).
+const THEME_LABELS = {
+  Crash: 'Crash Junctions',
+  School: 'School Zones',
+  Commercial: 'Commercial Zones',
+  Transit: 'Transit Nodes'
+};
+
+const themeLabel = (val) => THEME_LABELS[val] || val;
+
 const formatHierarchy = (val) => {
   if (!val) return null;
   return val.split(',').map(s => {
@@ -100,6 +112,72 @@ function setTagRow(rowId, valId, value, tagName) {
   const row = document.getElementById(rowId);
   row.hidden = !value;
   if (value) document.getElementById(valId).innerHTML = makeTags(value, tagName);
+}
+
+//#endregion
+
+
+//#region CRASH PATTERNS + COUNTERMEASURES
+
+const COUNTERMEASURE_CATEGORIES = [
+  'Road Geometry', 'Pedestrian Safety', 'Public Transport', 'Road Markings',
+  'Visibility', 'Vertical Markers', 'Speed Reduction', 'Signages'
+];
+
+/**
+ * Extracts "Type x Context" strings from crash-pattern.csv's Combinations
+ * column, a Python-list-string like "['A x B', 'C x D']".
+ */
+function parseCombinationsList(str) {
+  if (!str) return [];
+  return (str.match(/'([^']*)'/g) || []).map(m => m.slice(1, -1));
+}
+
+/**
+ * Given a junction's comma-separated Unique ID list and a Map of
+ * Unique ID -> crash-pattern.csv row, returns the deduped "Type x Context"
+ * combination strings for that junction's crashes.
+ */
+function getCrashPatterns(uniqueIdsStr, crashPatternByUid) {
+  if (!uniqueIdsStr) return [];
+  const ids = uniqueIdsStr.split(',').map(s => s.trim()).filter(Boolean);
+  const combos = new Set();
+  ids.forEach(id => {
+    const row = crashPatternByUid.get(id);
+    if (row) parseCombinationsList(row.Combinations).forEach(c => combos.add(c));
+  });
+  return [...combos];
+}
+
+/**
+ * Converts a SheetJS sheet_to_json({header:1}) array-of-arrays from
+ * crash-pattern-analysis.xlsx into a Map of "Type x Context" -> row data
+ * ({ type, context, countermeasures: { category: string[] } }). Uses fixed
+ * column indices (0=Type, 1=Context, 3-10=the 8 categories in order) rather
+ * than the verbose/messy real header text.
+ */
+function parseCrashPatternAnalysis(rowsArray) {
+  const byKey = new Map();
+  rowsArray.slice(1).forEach(r => {
+    const type = String(r[0] ?? '').trim();
+    if (!type || type === 'TOTAL') return;
+    const context = String(r[1] ?? '').trim();
+    const countermeasures = {};
+    COUNTERMEASURE_CATEGORIES.forEach((cat, i) => {
+      countermeasures[cat] = String(r[3 + i] ?? '').split('\n').map(s => s.trim()).filter(Boolean);
+    });
+    byKey.set(`${type} x ${context}`, { type, context, countermeasures });
+  });
+  return byKey;
+}
+
+/**
+ * Resolves a junction's combo keys to their full crash-pattern-analysis rows
+ * (one row per matched combo, in combo order), for rendering as a table:
+ * Type of Crash | Context | <8 countermeasure category columns>.
+ */
+function getCountermeasureRows(combos, analysisByKey) {
+  return combos.map(combo => analysisByKey.get(combo)).filter(Boolean);
 }
 
 //#endregion

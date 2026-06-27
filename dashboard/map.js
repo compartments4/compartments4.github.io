@@ -30,8 +30,15 @@ function csvRowToFeature(row) {
   return {
     type: 'Feature',
     geometry: { type: 'Point', coordinates: [parseFloat(long), parseFloat(lat)] },
-    // budget_category is derived for filtering/display; raw `budget` stays in `rest` untouched.
-    properties: { ...rest, budget_category: classifyBudget(row.budget) }
+    properties: {
+      ...rest,
+      // budget_category is derived for filtering/display; raw `budget` stays in `rest` untouched.
+      budget_category: classifyBudget(row.budget),
+      // Comma-joined, deduped theme + theme_2 — lets the existing j_code-style
+      // multi-value filter machinery (populateFilter/setupFilter) match a
+      // junction if either theme matches the selected filter value.
+      theme_combined: [...new Set([row.theme, row.theme_2].filter(Boolean))].join(',')
+    }
   };
 }
 
@@ -519,7 +526,7 @@ async function addLayers() {
  * @example
  * populateFilter('filter-junction', ['junctions-development-points', 'proposed-locations-points'], 'j_code');
  */
-async function populateFilter(dropdownId, layerIds, property) {
+async function populateFilter(dropdownId, layerIds, property, labelFn = (v) => v) {
   const dropdown = document.getElementById(dropdownId);
   if (!dropdown) return;
   const menu = dropdown.querySelector('sl-menu');
@@ -569,7 +576,7 @@ async function populateFilter(dropdownId, layerIds, property) {
     const item = document.createElement('sl-menu-item');
     item.setAttribute('type', 'checkbox');
     item.setAttribute('value', val);
-    item.textContent = val;
+    item.textContent = labelFn(val);
     menu.appendChild(item);
   });
 }
@@ -628,6 +635,16 @@ async function cacheSource(sourceId, filename) {
     console.error(`cacheSource: failed to load ${filename}`, e);
     _sourceCache[sourceId] = [];
   }
+}
+
+// Map of crash-pattern.csv's Unique ID -> row, used by openFeaturePanel to
+// resolve a junction's Crash Patterns from its own Unique ID list.
+let _crashPatternByUid = new Map();
+
+async function loadCrashPatterns() {
+  const res  = await fetch('./datasets/crash-pattern.csv');
+  const rows = parseCsv(await res.text());
+  _crashPatternByUid = new Map(rows.map(r => [r['Unique ID'], r]));
 }
 
 // Combines all active filter expressions per layer and applies them.
@@ -726,8 +743,8 @@ function addFilters() {
   setupFilter('filter-junction',    junctionLayers,  'j_code');
 
   addDropdownSearch('filter-theme');
-  populateFilter('filter-theme', ['proposed-locations-points'], 'theme');
-  setupFilter('filter-theme',    ['proposed-locations-points'], 'theme');
+  populateFilter('filter-theme', ['proposed-locations-points'], 'theme_combined', themeLabel);
+  setupFilter('filter-theme',    ['proposed-locations-points'], 'theme_combined');
 
   addDropdownSearch('filter-budget');
   populateFilter('filter-budget', ['proposed-locations-points'], 'budget_category');
@@ -828,13 +845,15 @@ map.on('click', (e) => {
 
 function openFeaturePanel(feature) {
   const props = feature.properties;
-  const { theme, j_name, j_code, road_hierarchy, budget_category, crash_count, crash_type, crash_context } = props;
+  const { theme, theme_2, j_name, j_code, road_hierarchy, budget_category, crash_count } = props;
   const hierarchy = formatHierarchy(road_hierarchy);
   const name = j_name ? j_name.split(',').map(s => s.trim()).filter(s => s && s !== 'NULL').join(', ') : null;
+  const crashPatterns = getCrashPatterns(props['Unique ID'], _crashPatternByUid);
 
   // Header tags
-  setTag('panel-tag-theme', theme);
-  document.getElementById('panel-header-tags').hidden = !theme;
+  setTag('panel-tag-theme', themeLabel(theme));
+  setTag('panel-tag-theme-2', themeLabel(theme_2));
+  document.getElementById('panel-header-tags').hidden = !theme && !theme_2;
 
   // Fields
   setRow('panel-row-id',        'panel-val-id',        j_code);
@@ -849,10 +868,9 @@ function openFeaturePanel(feature) {
   buildStreetViewCarousel(lat, lng, carousel);
 
   // Crash section
-  document.getElementById('panel-crash-section').hidden = crash_count == null && !crash_type && !crash_context;
-  setRow('panel-row-crash-count',    'panel-val-crash-count',    crash_count != null ? String(crash_count) : null);
-  setTagRow('panel-row-crash-type',    'panel-val-crash-type',    crash_type,    'crash-type');
-  setTagRow('panel-row-crash-context', 'panel-val-crash-context', crash_context, 'crash-context');
+  document.getElementById('panel-crash-section').hidden = crash_count == null && crashPatterns.length === 0;
+  setRow('panel-row-crash-count', 'panel-val-crash-count', crash_count != null ? String(crash_count) : null);
+  setTagRow('panel-row-crash-patterns', 'panel-val-crash-patterns', crashPatterns.join(','), 'crash-pattern');
 
   document.getElementById('panel-view-details').href = `junction.html?id=${j_code}`;
 
@@ -912,6 +930,7 @@ map.on('load', async () => {
   await Promise.all([
     cacheSource('blackspots',             'blackspots.geojson'),
     cacheSource('junctions-development', 'junctions-development.geojson'),
+    loadCrashPatterns(),
   ]);
 
   document.getElementById('loading').style.display = 'none';

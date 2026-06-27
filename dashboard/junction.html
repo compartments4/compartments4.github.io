@@ -14,6 +14,8 @@
         <link rel="stylesheet" href="style.css" />
         <link rel="stylesheet" href="page.css" />
 
+        <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
     </head>
 
     <body>
@@ -34,6 +36,7 @@
 
                 <div class="panel-header-tags" id="panel-header-tags">
                     <sl-tag id="panel-tag-theme" size="small" data-tag="theme"></sl-tag>
+                    <sl-tag id="panel-tag-theme-2" size="small" data-tag="theme"></sl-tag>
                 </div>
 
                 <div class="panel-fields">
@@ -59,13 +62,9 @@
                         <span class="panel-label">Crash Points</span>
                         <span class="panel-value" id="panel-val-crash-count"></span>
                     </div>
-                    <div class="panel-row" id="panel-row-crash-type">
-                        <span class="panel-label">Crash Type</span>
-                        <div class="panel-tags" id="panel-val-crash-type"></div>
-                    </div>
-                    <div class="panel-row" id="panel-row-crash-context">
-                        <span class="panel-label">Crash Context</span>
-                        <div class="panel-tags" id="panel-val-crash-context"></div>
+                    <div class="panel-row" id="panel-row-crash-patterns">
+                        <span class="panel-label">Crash Patterns</span>
+                        <div class="panel-tags" id="panel-val-crash-patterns"></div>
                     </div>
                 </div>
 
@@ -84,15 +83,18 @@
                 <div class="detail-section" id="countermeasures-section">
                     <div class="detail-section-header">
                         <h2>Countermeasures</h2>
+                        <sl-icon-button name="arrows-fullscreen" id="countermeasures-expand" label="Expand"></sl-icon-button>
                     </div>
-                    <div class="detail-section-body">
-                        <p style="color:#888;">Coming soon</p>
-                    </div>
+                    <div class="detail-section-body" id="countermeasures-body"></div>
                 </div>
 
             </section>
 
         </div>
+
+        <sl-dialog id="countermeasures-dialog" label="Countermeasures" style="--width: 90vw;">
+            <div id="countermeasures-body-expanded"></div>
+        </sl-dialog>
 
         <script src="panel-shared.js"></script>
         <script>
@@ -132,12 +134,20 @@
 
             async function init() {
                 const id = new URLSearchParams(location.search).get('id');
-                const [junctionsRes, categoriesRes] = await Promise.all([
+                const [junctionsRes, categoriesRes, crashPatternRes, analysisRes] = await Promise.all([
                     fetch('./datasets/175-junctions.csv'),
                     fetch('./datasets/categories.csv'),
+                    fetch('./datasets/crash-pattern.csv'),
+                    fetch('./datasets/crash-pattern-analysis.xlsx'),
                 ]);
                 const rows = parseCsv(await junctionsRes.text());
                 const categories = parseCategoriesCsv(await categoriesRes.text());
+                const crashPatternByUid = new Map(
+                    parseCsv(await crashPatternRes.text()).map(r => [r['Unique ID'], r])
+                );
+                const analysisWorkbook = XLSX.read(await analysisRes.arrayBuffer(), { type: 'array' });
+                const analysisSheet = analysisWorkbook.Sheets[analysisWorkbook.SheetNames[0]];
+                const analysisByKey = parseCrashPatternAnalysis(XLSX.utils.sheet_to_json(analysisSheet, { header: 1 }));
 
                 const matches = rows.filter(r => r.j_code === id);
                 if (matches.length > 1) {
@@ -152,16 +162,19 @@
                     return;
                 }
 
-                const { theme, j_name, j_code, road_hierarchy, budget, lat, long, crash_count, crash_type, crash_context } = row;
+                const { theme, theme_2, j_name, j_code, road_hierarchy, budget, lat, long, crash_count } = row;
                 const hierarchy = formatHierarchy(road_hierarchy);
                 const budgetCategory = classifyBudget(budget);
                 const name = j_name ? j_name.split(',').map(s => s.trim()).filter(s => s && s !== 'NULL').join(', ') : null;
+                const crashPatterns = getCrashPatterns(row['Unique ID'], crashPatternByUid);
+                const countermeasureRows = getCountermeasureRows(crashPatterns, analysisByKey);
 
                 document.title = name || j_code || 'Junction Detail';
                 document.getElementById('detail-title').textContent = name || j_code || '';
 
-                setTag('panel-tag-theme', theme);
-                document.getElementById('panel-header-tags').hidden = !theme;
+                setTag('panel-tag-theme', themeLabel(theme));
+                setTag('panel-tag-theme-2', themeLabel(theme_2));
+                document.getElementById('panel-header-tags').hidden = !theme && !theme_2;
 
                 setRow('panel-row-id', 'panel-val-id', j_code);
                 setRow('panel-row-hierarchy', 'panel-val-hierarchy', hierarchy);
@@ -173,10 +186,46 @@
                 carousel.innerHTML = '';
                 buildStreetViewCarousel(parseFloat(lat), parseFloat(long), carousel);
 
-                document.getElementById('panel-crash-section').hidden = crash_count == null && !crash_type && !crash_context;
+                document.getElementById('panel-crash-section').hidden = crash_count == null && crashPatterns.length === 0;
                 setRow('panel-row-crash-count', 'panel-val-crash-count', crash_count != null ? String(crash_count) : null);
-                setTagRow('panel-row-crash-type', 'panel-val-crash-type', crash_type, 'crash-type');
-                setTagRow('panel-row-crash-context', 'panel-val-crash-context', crash_context, 'crash-context');
+                setTagRow('panel-row-crash-patterns', 'panel-val-crash-patterns', crashPatterns.join(','), 'crash-pattern');
+
+                const cmCategoriesWithContent = COUNTERMEASURE_CATEGORIES.filter(
+                    cat => countermeasureRows.some(r => r.countermeasures[cat].length)
+                );
+                const cmHtml = countermeasureRows.length === 0
+                    ? '<p style="color:#888;">No countermeasures identified.</p>'
+                    : `<div class="countermeasure-table-wrap">
+                        <table class="countermeasure-table">
+                            <thead>
+                                <tr>
+                                    <th>Type of Crash</th>
+                                    <th>Context</th>
+                                    ${cmCategoriesWithContent.map(cat => `<th>${cat}</th>`).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${countermeasureRows.map(r => `
+                                    <tr>
+                                        <td>${r.type}</td>
+                                        <td>${r.context}</td>
+                                        ${cmCategoriesWithContent.map(cat => `
+                                            <td>${r.countermeasures[cat].length
+                                                ? `<ul class="countermeasure-list">${r.countermeasures[cat].map(item => `<li>${item}</li>`).join('')}</ul>`
+                                                : '—'}</td>
+                                        `).join('')}
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>`;
+
+                document.getElementById('countermeasures-body').innerHTML = cmHtml;
+                document.getElementById('countermeasures-body-expanded').innerHTML = cmHtml;
+                document.getElementById('countermeasures-expand').hidden = countermeasureRows.length === 0;
+                document.getElementById('countermeasures-expand').addEventListener('click', () => {
+                    document.getElementById('countermeasures-dialog').show();
+                });
 
                 const labelByKey = new Map(AUDIT_FIELDS);
                 const auditBody = document.getElementById('audit-data-body');
@@ -185,7 +234,7 @@
                         <h3 class="audit-category-title">${name}</h3>
                         ${keys.map(key => {
                             const label = labelByKey.get(key) ?? key;
-                            const isYes = row[key] === 'Yes';
+                            const isYes = ['yes', 'true'].includes(String(row[key]).trim().toLowerCase());
                             return `<div class="audit-row">
                                 <span class="audit-label">${label}</span>
                                 <span class="audit-badge ${isYes ? 'yes' : 'no'}">${isYes ? 'Yes' : 'No'}</span>

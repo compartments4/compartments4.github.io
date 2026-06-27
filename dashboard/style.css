@@ -235,13 +235,7 @@ sl-tag[data-tag="theme"]::part(base) {
   border-color: transparent;
 }
 
-sl-tag[data-tag="crash-type"]::part(base) {
-  background: #e8e8e8;
-  color: #333;
-  border-color: transparent;
-}
-
-sl-tag[data-tag="crash-context"]::part(base) {
+sl-tag[data-tag="crash-pattern"]::part(base) {
   background: #e8e8e8;
   color: #333;
   border-color: transparent;
