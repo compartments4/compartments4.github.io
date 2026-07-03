@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>South NH 44 — Project Intersect</title>
+
+  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+  <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+  <!--Font Awesome CDN-->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+  <!--Roboto + Share Tech Mono-->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+  <!--Web Awesome-->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.3.1/dist-cdn/styles/webawesome.css">
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.3.1/dist-cdn/webawesome.loader.js"></script>
+
+  <link rel="stylesheet" href="../_shared/chapter.css" />
+</head>
+
+<body>
+
+  <!-- Visual container -->
+  <div id="visual">
+    <div id="map"></div>
+    <div id="legend"></div>
+  </div>
+
+  <!-- Right panel: content + carousel + chart stacked -->
+  <div id="right-panel">
+
+  <div id="content-section">
+  <div id="text-panel">
+
+    <div class="step-content">
+      <div class="step-label">Intro</div>
+      <h1>Where do accidents occur in Bengaluru?</h1>
+      <p>A glance at a heat map of accidents in Bengaluru (2019 -2022) reveals 
+        that road crashes are not confined to the centre of the city. 
+        <br><br>
+        In fact, <strong>most crashes are concentrated along the highways </strong>,
+        in the city’s outskirts.</p>
+    </div>
+
+    <div class="step-content">
+      <div class="step-label">Step 01</div>
+      <h1>Are these Highways or Urban Roads?</h1>
+      <p>Our highways are supposed to be national and state corridors, but their character indicates something different.<br><br> 
+
+        Continuous strip development along our highways results in high footfall and mixed traffic streets.
+        
+        We can see how crashes concentrate near commercial and industrial estbalishments - especially where local roads intersect with the highway.
+        These nodes witness high pedestrian activity and vehicle congestion. 
+         <br><br>
+
+        <strong>Our highways evidently function as urban streets - but aren't designed for it.</strong>
+      <br>
+       This mismatch in infrastructure and usage makes these stretches prone to accidents.
+        
+      </p>
+    </div>
+
+    <div class="step-content">
+      <div class="step-label">Step 02</div>
+      <h1>Can we identify patterns of these accidents?</h1>
+      <p>Are there repetitive conditions of where and how these accidents occur on our highways? <br><br>
+        Let us explore this through the case of the Banglore- Hosur Highway - <strong>South NH 44</strong>. This stretch has <strong>17 Blackspots</strong> and witnessed <strong>244 crashes</strong> in 3 years </p>
+    </div>
+
+    <div class="step-content">
+      <div class="step-label">Step 03</div>
+      <h1>Top 10 Crash Patterns</h1>
+      <p>64% of crashes on the South NH44 could be attributed
+         to the following patterns of <strong>location</strong> of crash 
+         against <strong>type</strong> of crash<br><br>
+         Pedestrians proved to be the most vulnerable user group on highways, predominantly near Bus Stops. 
+        <br><br>
+        Let us dive into the top 5 crash patterns.
+      </p>
+    </div>
+
+    <div class="step-content">
+      <div class="step-label">Pattern 01</div>
+      <h1>Hit Pedestrian at Bus Stops</h1>
+            <p> Bus stops are the most dangerous location for pedestrians on the highway.<br><br>
+      
+      <strong>Highway Crossing Infrastructure not User Friendly</strong><br>
+      75% of pedestrian crashes at Bus stops occured within walking distance 
+      (a 250m radius) of subways or foot-over bridges. Before crash barriers 
+      were introduced in 2021, pedestrians chose to cross at grade due to 
+      poor maintenance and early closing hours of subways.<br><br>
+
+      <strong>Lack of Service Road Crossings and Footpath</strong><br>
+      The service road connecting stops to subways has no continuous footpath, 
+      so pedestrians walk on the road and cross in front of two-wheelers. 
+      The platform itself is too small — people spill onto the carriageway 
+      and board buses directly from the road, in the path of highway-speed 
+      traffic.
+
+              </p>
+
+    </div>
+
+    <div class="step-content">
+      <div class="step-label">Pattern 02</div>
+      <h1>Hit from Back along the Highway</h1>
+      <p> 
+      
+      <strong>Lorry to two-wheeler crashes</strong><br>
+      These make up 48% of all crashes on this stretch. 
+      Two-wheelers ride dangerously close to lorries during peak hours, 
+      and at close range fall entirely outside the lorry driver's field of vision 
+      — sudden swerves result in collisions.<br><br>
+
+      <strong>Speeding and Night Time</strong><br>
+      Poor lane marking, insufficient enforcement at merging points, 
+      and the absence of speed calming elements at black spots 
+      and downhill slopes compound the risk.
+      44% crashes occur at night, where missing road studs, 
+      reflective markings, and adequate lighting 
+      leave little margin for error.<br><br>
+      
+
+      <strong>Wrong parking</strong><br>
+      Wrong parking adds another layer of danger after dark. 
+      Lorries park along the highway due to a lack of designated rest stops or bays, 
+      and reduced visibility means two-wheelers and light motor vehicles crash 
+      into stationary trucks from behind.
+      
+      </p>
+
+    </div>
+
+      <div class="step-content">
+      <div class="step-label">Pattern 03</div>
+      <h1>Hit from Side/Back at Access Points</h1>
+      <p> 
+      <strong>Lack of Segregated entries and exits</strong><br>
+    Access points between highways and service roads are inadequately designed.
+     Median cuts and barricade openings serve as entries and exits simultaneously — 
+     without segregation, these points are high risk. Vehicles speed while 
+       merging into the service road or the main road, increasing chances of 
+       conflict with other vehicles, due to the lack of segregated deceleration 
+       or acceleration lanes.
+     <a href="https://www.pwc.in/research-and-insights-hub/heading-out-to-the-highway-engineering-safer-designs.html">PWC</a> 
+     identifies this as a recurring concern across state highways.<br><br>
+
+      <strong>Heavy to Light Vehicle Conflict</strong><br>
+      Since this is a critical merge point between lanes and road hierarchies, 
+      two wheelers are again the most vulnerable and have faced most crashes
+       at these points against lorries, buses and cars.
+    
+      </p>
+    </div>
+
+    <div class="step-content">
+      <div class="step-label">Pattern 04</div>
+      <h1>Head on - Service Roads</h1>
+      <p> The Service Roads on South NH 44 operate as <strong>Two Way carriageways.</strong><br>
+
+      Out of all Head On collisions on the stretch, 30% occur along the service road. 
+      These collisions predominantly involve two-wheelers, either in crashes 
+      with lorries or with other two-wheelers.<br><br>
+
+      <strong>Entries and Exits</strong><br>
+      There is a diverse mix of land use along the service road
+      of malls, workplaces, shops, eateries, lodges and markets.
+      Hence, the service roads are active with high volumes of 
+      pedestrian and vehicular traffic. In addition to local 
+      activity, heavy vehicles use the service road to access 
+      industrial hubs. Due to the two way operation of the 
+      carriageway and its active edge, head on conflicts occur 
+      near building access points along the service road.<br><br>
+
+      <strong>Infrastructure</strong><br>
+      The lack of physical demarcation of lanes, road studs, 
+      faded lane markings, and no speed calming at these 
+      critical zones along the service road catalyses the 
+      possibility of head on conflict.
+      </p>
+
+    </div>
+
+    <div class="step-content">
+      <div class="step-label">Pattern 05</div>
+      <h1>Hit from back/front - By Lane Intersections</h1>
+      <p> By Lane intersections are either local roads 
+        intersecting with just the service road, or an 
+        intersection between the main highway, service road and 
+        a local road. By Lane Intersection includes T Junction, 
+        Service Road Junction and Intersection Contexts. <br>
+
+        Since the service road operates as two way, the 
+        intersections have more possibilities for conflicts. <br><br>
+
+      <strong>Infrastructure</strong><br>
+      The intersections lack road safety elements such as speed 
+      calming elements or physical lane demarcation as the 
+      intersection approaches. The turning radii are often not 
+      appropriate for larger vehicles accessing the local roads. 
+      Signages aren’t adequate on the approaching arms. These 
+      conditions accelerate haphazard vehicular movement at the 
+      intersections.
+      </p>
+
+    </div>
+
+
+  </div>
+
+  <!-- Nav -->
+  <div id="nav">
+    <button class="nav-btn" id="btn-prev"><i class="fa-solid fa-angle-left"></i></button>
+    <span id="step-indicator"></span>
+    <button class="nav-btn" id="btn-next"><i class="fa-solid fa-angle-right"></i></button>
+  </div>
+
+  </div><!-- /#content-section -->
+
+    <div id="carousel-panel">
+      <wa-carousel navigation pagination slides-per-page="1" loop mouse-dragging>
+        <wa-carousel-item>
+          <img src="images/pattern-01/Bus Stop.png" alt="Bus Stop" />
+        </wa-carousel-item>
+        <wa-carousel-item>
+          <img src="images/pattern-01/Bus Stop2.png" alt="Bus Stop 2" />
+        </wa-carousel-item>
+        <wa-carousel-item>
+          <img src="images/pattern-01/Crash Barriers.png" alt="Crash Barriers" />
+        </wa-carousel-item>
+        <wa-carousel-item>
+          <img src="images/pattern-01/Subway.png" alt="Subway" />
+        </wa-carousel-item>
+      </wa-carousel>
+    </div>
+
+    <div id="carousel-panel-p03" style="display:none">
+      <wa-carousel navigation pagination slides-per-page="1" loop mouse-dragging>
+        <wa-carousel-item>
+          <img src="images/pattern-03/access point.png" alt="Access Point" />
+        </wa-carousel-item>
+        <wa-carousel-item>
+          <img src="images/pattern-03/Access Point 2.png" alt="Access Point 2" />
+        </wa-carousel-item>
+        <wa-carousel-item>
+          <img src="images/pattern-03/Access Point PWC.png" alt="Access Point PWC" />
+        </wa-carousel-item>
+      </wa-carousel>
+    </div>
+
+    <div id="bottom-section">
+
+      <div id="chart-panel">
+        <div class="chart-title">Chart title</div>
+        <canvas id="chart"></canvas>
+      </div>
+
+      <div id="quote-panel">
+        <p class="quote-text">Write your quote here.</p>
+        <i class="fa-solid fa-quote-right quote-icon"></i>
+      </div>
+
+    </div><!-- /#bottom-section -->
+
+  </div><!-- /#right-panel -->
+
+  <script type="module">
+    import { initMap, initSteps, addBaseMap } from '../_shared/chapter.js';
+    import { addChapterLayers, steps } from './ch01.js';
+
+    const map = initMap('map', { center: steps[0].center, zoom: steps[0].zoom });
+    window._map = map;
+
+    map.on('load', () => {
+      addBaseMap(map);
+      addChapterLayers(map);
+      initSteps((index, prev) => {
+        if (prev >= 0) steps[prev]?.exit?.(map);
+        steps[index]?.enter?.(map);
+        const s = steps[index];
+        if (s.center) map.flyTo({ center: s.center, zoom: s.zoom, duration: 1200 });
+      }, steps);
+    });
+  </script>
+
+</body>
+
+</html>
