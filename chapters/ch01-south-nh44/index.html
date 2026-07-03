@@ -223,35 +223,17 @@
 
   </div><!-- /#content-section -->
 
-    <div id="carousel-panel">
-      <wa-carousel navigation pagination slides-per-page="1" loop mouse-dragging>
-        <wa-carousel-item>
-          <img src="images/pattern-01/Bus Stop.png" alt="Bus Stop" />
-        </wa-carousel-item>
-        <wa-carousel-item>
-          <img src="images/pattern-01/Bus Stop2.png" alt="Bus Stop 2" />
-        </wa-carousel-item>
-        <wa-carousel-item>
-          <img src="images/pattern-01/Crash Barriers.png" alt="Crash Barriers" />
-        </wa-carousel-item>
-        <wa-carousel-item>
-          <img src="images/pattern-01/Subway.png" alt="Subway" />
-        </wa-carousel-item>
-      </wa-carousel>
+    <div id="carousel-panel" class="ch-carousel">
+      <div class="ch-slide"><img src="images/pattern-01/Bus Stop.png" alt="" /><span class="ch-caption">Lack of Footpaths or Crossings at Bus Stops</span></div>
+      <div class="ch-slide"><img src="images/pattern-01/Bus Stop2.png" alt="" /><span class="ch-caption">Inadequate space for pedestrians at Bus Stops</span></div>
+      <div class="ch-slide"><img src="images/pattern-01/Crash Barriers.png" alt="" /><span class="ch-caption">Crash Barriers to prevent Jaywalking</span></div>
+      <div class="ch-slide"><img src="images/pattern-01/Subway.png" alt="" /><span class="ch-caption">Condition of Subways for Crossing</span></div>
     </div>
 
-    <div id="carousel-panel-p03" style="display:none">
-      <wa-carousel navigation pagination slides-per-page="1" loop mouse-dragging>
-        <wa-carousel-item>
-          <img src="images/pattern-03/access point.png" alt="Access Point" />
-        </wa-carousel-item>
-        <wa-carousel-item>
-          <img src="images/pattern-03/Access Point 2.png" alt="Access Point 2" />
-        </wa-carousel-item>
-        <wa-carousel-item>
-          <img src="images/pattern-03/Access Point PWC.png" alt="Access Point PWC" />
-        </wa-carousel-item>
-      </wa-carousel>
+    <div id="carousel-panel-p03" class="ch-carousel" style="display:none">
+      <div class="ch-slide"><img src="images/pattern-03/access point.png" alt="" /><span class="ch-caption">Access Point</span></div>
+      <div class="ch-slide"><img src="images/pattern-03/Access Point 2.png" alt="" /><span class="ch-caption">Congestion at Access Points</span></div>
+      <div class="ch-slide"><img src="images/pattern-03/Access Point PWC.png" alt="" /><span class="ch-caption">Conflicts at Access Points - Diagram by PWC</span></div>
     </div>
 
     <div id="bottom-section">
@@ -271,9 +253,10 @@
   </div><!-- /#right-panel -->
 
   <script type="module">
-    import { initMap, initSteps, addBaseMap } from '../_shared/chapter.js';
+    import { initMap, initSteps, addBaseMap, initCarousels } from '../_shared/chapter.js';
     import { addChapterLayers, steps } from './ch01.js';
 
+    initCarousels();
     const map = initMap('map', { center: steps[0].center, zoom: steps[0].zoom });
     window._map = map;
 

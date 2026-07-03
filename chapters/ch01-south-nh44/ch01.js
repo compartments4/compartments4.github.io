@@ -34,10 +34,10 @@ export function addChapterLayers(map) {
   hideLayer(map, 'land-use-polygon');
 
   //Heat Map Crash Points 2020-2022
-  addSource(map, 'crash-points', 'crash-points.geojson');
+  addSource(map, 'old-crash-points', 'old-crash-points.geojson');
   addHeatmapLayer(map, {
         layerId:    'crash-points-heat',
-        sourceId:   'crash-points',
+        sourceId:   'old-crash-points',
         weightProp: 'density',
         weightMax:  1,
         paint: {
@@ -159,7 +159,7 @@ export const steps = [
     enter(map) {
 
       showLegend([
-        { shape: 'circle', fill: '#ff2121', stroke: null, label: 'Accident Spot' },
+        { shape: 'circle', fill: '#ff2121', stroke: null, label: 'Crash Heat Map' },
         { shape: 'line', fill: '#fff821', stroke: null, label: 'Highway' },
      
       ]);
@@ -179,7 +179,7 @@ export const steps = [
   {
     enter(map) {
       showLegend([
-        { shape: 'circle', fill: '#ff2121', stroke: null, label: 'Accident Spot' },
+        { shape: 'circle', fill: '#ff2121', stroke: null, label: 'Crash Heat Map' },
         { shape: 'square', fill: '#ff5cce', stroke: null, label: 'Commercial' },
         { shape: 'square', fill: '#b05ee6', stroke: null, label: 'Industrial' },
         { shape: 'square', fill: '#e6c65e75', stroke: null, label: 'Residential' },
@@ -257,7 +257,7 @@ export const steps = [
         { shape: 'square', fill: '#3b82f6', stroke: null, label: '250m Buffer around FOB/ Subway' },
         { shape: 'line',   fill: '#22c55e', stroke: null, label: 'Footover Bridge / Subway' },
       ]);
-      document.getElementById('carousel-panel').style.display = 'block';
+      document.getElementById('carousel-panel').style.display = 'flex';
       document.getElementById('right-panel').classList.add('has-carousel');
     },
     exit(map)  {
@@ -279,7 +279,7 @@ export const steps = [
     enter(map) {
       showLayer(map, 'south-crashes');
       setLayerOpacity(map, 'crash-points-heat', 0.1);
-      colorLayerByValue(map, 'south-crashes', 'Combinations', 'Hit from Back,Along Main Road', '#F15C61', 'rgba(255, 255, 255, 0.04)');
+      colorLayerByValue(map, 'south-crashes', 'Combinations', 'Hit from Back,Along Main Road', '#F15C61', 'rgba(255, 255, 255, 0.12)');
       showLegend([
         { shape: 'circle', fill: '#F15C61', stroke: null, label: 'Hit from Back · Along Main Road' },
       ]);
@@ -304,7 +304,7 @@ export const steps = [
         { shape: 'circle', fill: '#f472b6', stroke: null, label: 'Hit Pedestrian · Access Point' },
         { shape: 'circle', fill: '#60a5fa', stroke: null, label: 'Vehicular Crashes · Access Point' },
       ]);
-      document.getElementById('carousel-panel-p03').style.display = 'block';
+      document.getElementById('carousel-panel-p03').style.display = 'flex';
       document.getElementById('right-panel').classList.add('has-carousel');
     },
     exit(map) {

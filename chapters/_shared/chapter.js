@@ -418,3 +418,51 @@ export async function drawPieChart(map, sourceId, attribute, options = {}) {
 }
 
 //#endregion
+
+
+//#region Custom Carousel
+
+export function initCarousels() {
+  document.querySelectorAll('.ch-carousel').forEach(el => {
+    const slideEls = [...el.querySelectorAll('.ch-slide')];
+    if (!slideEls.length) return;
+
+    const captions = slideEls.map(s => s.querySelector('.ch-caption')?.textContent || '');
+    const imgs     = slideEls.map(s => s.querySelector('img').outerHTML);
+
+    let current = 0;
+
+    el.innerHTML = `
+      <div class="ch-carousel-track-wrap">
+        <div class="ch-carousel-track">
+          ${imgs.map(img => `<div class="ch-carousel-slide">${img}</div>`).join('')}
+        </div>
+        <button class="ch-carousel-btn ch-prev">&#8592;</button>
+        <button class="ch-carousel-btn ch-next">&#8594;</button>
+      </div>
+      <div class="ch-carousel-bottom">
+        <div class="ch-carousel-caption">${captions[0]}</div>
+        <div class="ch-carousel-dots">
+          ${captions.map((_, i) => `<button class="ch-carousel-dot${i === 0 ? ' active' : ''}"></button>`).join('')}
+        </div>
+      </div>
+    `;
+
+    const track   = el.querySelector('.ch-carousel-track');
+    const caption = el.querySelector('.ch-carousel-caption');
+    const dots    = el.querySelectorAll('.ch-carousel-dot');
+
+    function goTo(n) {
+      current = (n + captions.length) % captions.length;
+      track.style.transform = `translateX(-${current * 100}%)`;
+      caption.textContent = captions[current];
+      dots.forEach((d, i) => d.classList.toggle('active', i === current));
+    }
+
+    el.querySelector('.ch-prev').addEventListener('click', () => goTo(current - 1));
+    el.querySelector('.ch-next').addEventListener('click', () => goTo(current + 1));
+    dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+  });
+}
+
+//#endregion
