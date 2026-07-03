@@ -204,11 +204,13 @@ body {
 }
 
 .swatch-pl {
+  border-radius: 50%;
   background: rgba(255, 234, 0, 0.3);
   border: 2px solid #d9ff00;
 }
 
 .swatch-bs {
+  border-radius: 50%;
   background: rgba(255, 0, 0, 0.2);
   border: 2px solid #ff0000;
 }
