@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>Project Intersect City Map</title>
+
+        <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+        <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+        <script src="../libs/maplibre-gl-layers-control.js"></script>
+        <script src="https://unpkg.com/@maptiler/geocoding-control@3.0.0/dist/maplibregl.umd.js"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css" />
+        <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js"></script>
+
+        <link rel="stylesheet" href="style.css" />
+
+    </head>
+
+    <body>
+
+        <div id="header">
+
+            <sl-dropdown class="header-filter" id="filter-corporation" stay-open-on-select hoist distance="4">
+                <sl-button slot="trigger" caret>Corporation</sl-button>
+                <sl-input placeholder="Search…" size="small" clearable></sl-input>
+                <sl-menu>
+                    <sl-menu-item value="all">All</sl-menu-item>
+                    <sl-divider></sl-divider>
+                    <sl-menu-item type="checkbox" value="Central">Central</sl-menu-item>
+                    <sl-menu-item type="checkbox" value="East">East</sl-menu-item>
+                    <sl-menu-item type="checkbox" value="North">North</sl-menu-item>
+                    <sl-menu-item type="checkbox" value="South">South</sl-menu-item>
+                    <sl-menu-item type="checkbox" value="West">West</sl-menu-item>
+                </sl-menu>
+            </sl-dropdown>
+
+            <sl-dropdown class="header-filter" id="filter-junction" stay-open-on-select hoist distance="4">
+                <sl-button slot="trigger" caret>Junction ID</sl-button>
+                <sl-input placeholder="Search…" size="small" clearable></sl-input>
+                <sl-menu>
+                    <sl-menu-item value="all">All</sl-menu-item>
+                </sl-menu>
+            </sl-dropdown>
+
+
+            <sl-dropdown class="header-filter" id="filter-road-hierarchy" stay-open-on-select hoist distance="4">
+                <sl-button slot="trigger" caret>Road Hierarchy</sl-button>
+                <sl-input placeholder="Search…" size="small" clearable></sl-input>
+                <sl-menu>
+                    <sl-menu-item value="all">All</sl-menu-item>
+                    <sl-divider></sl-divider>
+                    <sl-menu-item type="checkbox" value="ARTERIAL">Arterial</sl-menu-item>
+                    <sl-menu-item type="checkbox" value="SUB_ARTERIAL">Sub-Arterial</sl-menu-item>
+                </sl-menu>
+            </sl-dropdown>
+
+            <sl-dropdown class="header-filter" id="filter-theme" stay-open-on-select hoist distance="4">
+                <sl-button slot="trigger" caret>Theme</sl-button>
+                <sl-input placeholder="Search…" size="small" clearable></sl-input>
+                <sl-menu>
+                    <sl-menu-item value="all">All</sl-menu-item>
+                </sl-menu>
+            </sl-dropdown>
+
+           <!--<sl-dropdown class="header-filter" id="filter-budget" stay-open-on-select hoist distance="4">
+                <sl-button slot="trigger" caret>Budget</sl-button>
+                <sl-input placeholder="Search…" size="small" clearable></sl-input>
+                <sl-menu>
+                    <sl-menu-item value="all">All</sl-menu-item>
+                </sl-menu>
+            </sl-dropdown>-->
+
+            <sl-button id="btn-reset-filters" variant="text" size="small">
+                <sl-icon slot="prefix" name="arrow-counterclockwise"></sl-icon>
+                Reset
+            </sl-button>
+
+            <div id="header-right">
+                <div id="header-search"></div>
+                <sl-icon-button id="btn-info-panel" name="info-lg" label="Open data tables"></sl-icon-button>
+            </div>
+        </div>
+
+        <div id="map-wrap">
+            <div id="loading" class="loading">Loading map...</div>
+            <div id="map"></div>
+            <div class="map-overlay">
+                <div class="overlay-row">
+                    <span class="overlay-swatch swatch-pl"></span>
+                    <span class="overlay-label">Priority Locations</span>
+                    <span class="overlay-count" id="stat-pl">180</span>
+                </div>
+                <div class="overlay-row">
+                    <span class="overlay-swatch swatch-bs"></span>
+                    <span class="overlay-label">Blackspots (BTP 2023–2025)</span>
+                    <span class="overlay-count" id="stat-bs">62</span>
+                </div>
+                <div class="overlay-row">
+                    <span class="overlay-swatch swatch-jd"></span>
+                    <span class="overlay-label">Junctions Developed / under Development</span>
+                    <span class="overlay-count" id="stat-jd">82</span>
+                </div>
+                <div class="overlay-row overlay-row-sub">
+                    <span class="overlay-label">Suraksha 75</span>
+                    <span class="overlay-count" id="stat-s75">57</span>
+                </div>
+                <div class="overlay-row overlay-row-sub">
+                    <span class="overlay-label">15th Finance</span>
+                    <span class="overlay-count" id="stat-f15">26</span>
+                </div>
+            </div>
+            <sl-drawer id="info-panel" contained label="Counts">
+                <div id="info-panel-content">
+                    <div class="info-tabs">
+                        <button class="info-tab" data-tab="blackspots">Blackspots</button>
+                        <button class="info-tab" data-tab="crash">Crash Junctions</button>
+                        <button class="info-tab active" data-tab="votes">Votes</button>
+                    </div>
+                    <div class="info-table-wrap" id="info-tab-blackspots" hidden></div>
+                    <div class="info-table-wrap" id="info-tab-crash" hidden></div>
+                    <div class="info-table-wrap" id="info-tab-votes"></div>
+                </div>
+            </sl-drawer>
+
+            <sl-drawer id="feature-panel" contained label="">
+                <div slot="footer" style="display:flex; gap:8px; width:100%;">
+                    <sl-button id="panel-view-details" variant="default" style="flex:1;" href="#" target="_blank">
+                        View Details
+                        <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                    </sl-button>
+                    <button id="panel-vote-btn" style="flex:1;">
+                        <sl-icon name="hand-thumbs-up"></sl-icon>
+                        <span id="panel-vote-label">Vote</span>
+                        <span id="panel-vote-count"> · 0</span>
+                    </button>
+                </div>
+                <div id="feature-panel-content">
+                    <div class="panel-header-tags" id="panel-header-tags">
+                        <sl-tag id="panel-tag-theme" size="small" data-tag="theme"></sl-tag>
+                        <sl-tag id="panel-tag-theme-2" size="small" data-tag="theme"></sl-tag>
+                    </div>
+                    <div class="panel-fields">
+                        <div class="panel-row" id="panel-row-id">
+                            <span class="panel-label">ID</span>
+                            <span class="panel-value" id="panel-val-id"></span>
+                        </div>
+
+                        <div class="panel-row" id="panel-row-hierarchy">
+                            <span class="panel-label">Hierarchy</span>
+                            <span class="panel-value" id="panel-val-hierarchy"></span>
+                        </div>
+
+                        <!--<div class="panel-row" id="panel-row-budget">
+                            <span class="panel-label">Budget</span>
+                            <span class="panel-value" id="panel-val-budget"></span>
+                        </div>-->
+                    </div>
+                    <sl-carousel class="panel-carousel" id="panel-carousel" navigation pagination loop mouse-dragging></sl-carousel>
+                    <div class="panel-fields" id="panel-crash-section">
+                        <div class="panel-row" id="panel-row-crash-count">
+                            <span class="panel-label">Crash Points</span>
+                            <span class="panel-value" id="panel-val-crash-count"></span>
+                        </div>
+                        <div class="panel-row" id="panel-row-crash-patterns">
+                            <span class="panel-label">Crash Patterns</span>
+                            <div class="panel-tags" id="panel-val-crash-patterns"></div>
+                        </div>
+                    </div>
+                </div>
+            </sl-drawer>
+        </div>
+
+        <script src="panel-shared.js"></script>
+        <script src="map.js"></script>
+
+    </body>
+
+</html>

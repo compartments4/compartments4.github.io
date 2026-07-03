@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hero Record — Project Intersect</title>
+  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+  <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: #0b1a22;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+
+    #map {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+    }
+
+    .maplibregl-ctrl-top-right,
+    .maplibregl-ctrl-top-left,
+    .maplibregl-ctrl-bottom-right,
+    .maplibregl-ctrl-bottom-left,
+    .maplibregl-ctrl-attrib { display: none !important; }
+
+    #vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(5,14,20,0.75) 100%);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* ── START SCREEN ─────────────────────────────────── */
+    #start-screen {
+      position: absolute;
+      inset: 0;
+      background: #0b1a22;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      transition: opacity 0.8s ease;
+    }
+    #start-screen.fade-out { opacity: 0; pointer-events: none; }
+
+    #start-screen h1 {
+      font-size: 22px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 48px;
+    }
+    .seq-preview {
+      display: flex;
+      gap: 0;
+      margin-bottom: 52px;
+      border: 0.5px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .seq-step {
+      padding: 16px 28px;
+      border-right: 0.5px solid rgba(255,255,255,0.1);
+      text-align: center;
+    }
+    .seq-step:last-child { border-right: none; }
+    .seq-step .t { font-size: 11px; color: #d9ff00; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+    .seq-step .d { font-size: 13px; color: rgba(255,255,255,0.5); }
+
+    #start-btn {
+      padding: 16px 56px;
+      background: #d9ff00;
+      border: none;
+      border-radius: 4px;
+      color: #0b1a22;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    #start-btn:hover { opacity: 0.88; }
+    #start-hint {
+      margin-top: 20px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.22);
+      letter-spacing: 0.08em;
+    }
+
+    /* ── PROGRESS BAR ─────────────────────────────────── */
+    #progress {
+      position: absolute;
+      bottom: 0; left: 0;
+      height: 2px;
+      background: #d9ff00;
+      width: 0%;
+      z-index: 100;
+      opacity: 0;
+    }
+
+    /* ── PHASE LABEL ──────────────────────────────────── */
+    #phase-title {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.4s;
+      white-space: nowrap;
+    }
+
+    /* ── END CARD ─────────────────────────────────────── */
+    #end-card {
+      position: absolute;
+      left: 90px;
+      bottom: 90px;
+      z-index: 80;
+      pointer-events: none;
+    }
+
+    #end-eyebrow {
+      font-size: 13px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #d9ff00;
+      margin-bottom: 18px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    #end-line1, #end-line2, #end-line3 {
+      font-size: 76px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.05;
+      display: block;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      letter-spacing: -0.02em;
+    }
+    #end-sub {
+      margin-top: 24px;
+      font-size: 18px;
+      color: rgba(255,255,255,0.4);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .end-visible {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+    }
+
+    /* ── COUNTER ──────────────────────────────────────── */
+    #counter-wrap {
+      position: absolute;
+      top: 50%;
+      right: 120px;
+      transform: translateY(-50%);
+      text-align: right;
+      z-index: 80;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      pointer-events: none;
+    }
+    #counter-wrap.visible { opacity: 1; }
+    #counter-num {
+      font-size: 140px;
+      font-weight: 900;
+      color: #d9ff00;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 80px rgba(217,255,0,0.25);
+    }
+    #counter-label {
+      font-size: 16px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="map"></div>
+  <div id="vignette"></div>
+
+  <div id="end-card">
+    <div id="end-eyebrow">Project Intersect · Bengaluru</div>
+    <span id="end-line1">High Risk Locations.</span>
+    <span id="end-line2">One city.</span>
+    <span id="end-line3">Act now.</span>
+    <div id="end-sub">Fund &nbsp;·&nbsp; Vote &nbsp;·&nbsp; Prioritise</div>
+  </div>
+
+  <div id="counter-wrap">
+    <div id="counter-num">175</div>
+    <div id="counter-label">High-Risk Locations</div>
+  </div>
+
+  <div id="phase-title"></div>
+  <div id="progress"></div>
+
+  <div id="start-screen">
+    <h1 id="status-label">Loading map…</h1>
+    <div class="seq-preview">
+      <div class="seq-step"><div class="t">0–2s</div><div class="d">Heatmap · city wide</div></div>
+      <div class="seq-step"><div class="t">2–4s</div><div class="d">Layers bloom in</div></div>
+      <div class="seq-step"><div class="t">4–7s</div><div class="d">Deep zoom · cluster</div></div>
+      <div class="seq-step"><div class="t">7–8s</div><div class="d">Hold · counter</div></div>
+      <div class="seq-step"><div class="t">8–10s</div><div class="d">Pull back · end card</div></div>
+    </div>
+    <button id="start-btn" onclick="begin()" disabled style="opacity:0.4;cursor:not-allowed;">Loading…</button>
+    <div id="start-hint">Open fullscreen (F11) · Start your screen recorder · Then click</div>
+  </div>
+
+  <script>
+  const map = new maplibregl.Map({
+    container: 'map',
+    style: './datasets/project_intersect.json',
+    center: [77.58, 12.97],
+    zoom: 9.6,
+    bearing: 0,
+    pitch: 0,
+    interactive: false,
+    attributionControl: false,
+    fadeDuration: 0
+  });
+
+  map.on('load', () => {
+    // Sources
+    const srcs = {
+      'gba-boundary':          'gba-boundary.geojson',
+      'gba-zones':             'gba-zones.geojson',
+      'gba-wards':             'gba-wards.geojson',
+      'crash-points':          'crash-points.geojson',
+      'blackspots':            'blackspots.geojson',
+      'junctions-development': 'junctions-development.geojson',
+      'proposed-locations':    'proposed-locations.geojson',
+      'labels':                'labels.geojson',
+    };
+    Object.entries(srcs).forEach(([id, file]) =>
+      map.addSource(id, { type: 'geojson', data: `./datasets/${file}` })
+    );
+
+    // Boundaries
+    map.addLayer({ id: 'gba-boundary-line', type: 'line', source: 'gba-boundary',
+      paint: { 'line-color': '#ffffff', 'line-width': 1, 'line-dasharray': [2,3], 'line-opacity': 0.6 }});
+    map.addLayer({ id: 'gba-zones-line', type: 'line', source: 'gba-zones',
+      paint: { 'line-color': '#ffffff', 'line-width': 0.8, 'line-opacity': 0.35 }});
+    map.addLayer({ id: 'gba-wards-line', type: 'line', source: 'gba-wards',
+      paint: { 'line-color': '#ffffff', 'line-width': 0.1, 'line-opacity': 0.3 }});
+
+    // Heatmap — starts bright
+    map.addLayer({
+      id: 'crash-heat', type: 'heatmap', source: 'crash-points',
+      paint: {
+        'heatmap-weight': ['interpolate', ['linear'], ['get', 'density'], 0, 0, 1, 1],
+        'heatmap-radius': ['interpolate', ['linear'], ['zoom'],
+          0, 2, 5, 10, 8.54, 10, 10.04, 15, 10.53, 25, 11.26, 30, 12.18, 40, 13.68, 60],
+        'heatmap-opacity': 0.55,
+        'heatmap-intensity': 0.6,
+        'heatmap-color': ['step', ['heatmap-density'],
+          'rgba(0,0,255,0)',
+          0.5, 'hsla(0,53%,92%,0.43)',
+          0.6, 'hsla(0,86%,87%,0.56)',
+          0.9, 'hsla(0,83%,75%,0.61)',
+          1,   'hsla(0,90%,53%,0.88)'],
+        'heatmap-opacity-transition': { duration: 1500, delay: 0 }
+      }
+    });
+
+    // Blackspots — start hidden
+    map.addLayer({ id: 'blackspots-fill', type: 'fill', source: 'blackspots',
+      paint: { 'fill-color': '#ff00004e', 'fill-opacity': 0,
+        'fill-opacity-transition': { duration: 1400, delay: 0 } }});
+    map.addLayer({ id: 'blackspots-line', type: 'line', source: 'blackspots',
+      paint: { 'line-color': '#ff0000', 'line-width': 5, 'line-opacity': 0,
+        'line-opacity-transition': { duration: 1400, delay: 0 } }});
+
+    // Green junctions — start hidden
+    map.addLayer({ id: 'junctions-dots', type: 'circle', source: 'junctions-development',
+      paint: {
+        'circle-color': '#00f82d', 'circle-stroke-color': '#00ff15',
+        'circle-radius': ['interpolate', ['linear'], ['zoom'],
+          0, 1.5, 10.25, 2, 12.1, 3, 13.51, 6, 14.62, 9, 22, 3],
+        'circle-stroke-width': 2,
+        'circle-opacity': 0, 'circle-stroke-opacity': 0,
+        'circle-opacity-transition': { duration: 1400, delay: 0 },
+        'circle-stroke-opacity-transition': { duration: 1400, delay: 0 }
+      }
+    });
+
+    // Yellow priority locations — start hidden
+    map.addLayer({ id: 'priority-fill', type: 'fill', source: 'proposed-locations',
+      paint: { 'fill-color': '#ffea004e', 'fill-opacity': 0,
+        'fill-opacity-transition': { duration: 1400, delay: 0 } }});
+    map.addLayer({ id: 'priority-line', type: 'line', source: 'proposed-locations',
+      paint: { 'line-color': '#d9ff00', 'line-width': 2.5, 'line-opacity': 0,
+        'line-opacity-transition': { duration: 1400, delay: 0 } }});
+
+    // Labels
+    map.addLayer({ id: 'labels-text', type: 'symbol', source: 'labels',
+      layout: { 'symbol-placement': 'point', 'text-field': ['get', 'name'],
+        'text-font': ['Open Sans Regular'], 'text-size': 12 },
+      paint: { 'text-color': '#000', 'text-halo-color': '#d5e655', 'text-halo-width': 4 }
+    });
+
+    // Enable start button
+    const btn = document.getElementById('start-btn');
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+    document.getElementById('status-label').textContent = 'Map Ready — Start Recording First';
+  });
+
+
+  // ─────────────────────────────────────────────────────────
+  // SEQUENCE
+  // ─────────────────────────────────────────────────────────
+  const SEQUENCE = [
+
+    { at: 0, run() {
+      showPhase('Establishing — heatmap');
+      map.easeTo({ center: [77.585, 12.97], zoom: 10.4, bearing: 0, pitch: 0,
+        duration: 2100, easing: t => t });
+    }},
+
+    { at: 2100, run() {
+      showPhase('Layers bloom in');
+      // Heatmap dims
+      map.setPaintProperty('crash-heat', 'heatmap-opacity', 0.15);
+      // Yellow first
+      map.setPaintProperty('priority-fill', 'fill-opacity', 0.2);
+      map.setPaintProperty('priority-line', 'line-opacity', 1.0);
+      // Red 400ms later
+      setTimeout(() => {
+        map.setPaintProperty('blackspots-fill', 'fill-opacity', 0.2);
+        map.setPaintProperty('blackspots-line', 'line-opacity', 1.0);
+      }, 400);
+      // Green 800ms later
+      setTimeout(() => {
+        map.setPaintProperty('junctions-dots', 'circle-opacity', 0.5);
+        map.setPaintProperty('junctions-dots', 'circle-stroke-opacity', 0.6);
+      }, 800);
+      // Gentle drift
+      map.easeTo({ center: [77.592, 12.975], zoom: 10.8, bearing: -2,
+        duration: 2000, easing: t => t });
+    }},
+
+    { at: 4200, run() {
+      showPhase('Zoom into cluster');
+      // Deep dramatic zoom — adjust center to your densest blackspot cluster
+      map.flyTo({
+        center: [77.590, 12.968],
+        zoom: 14.2,
+        bearing: -5,
+        pitch: 0,
+        duration: 2900,
+        easing: t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2
+      });
+    }},
+
+    { at: 8400, run() {
+      showPhase('Pull back');
+      // Counter fades
+      const cw = document.getElementById('counter-wrap');
+      cw.style.transition = 'opacity 0.7s ease';
+      cw.style.opacity = '0';
+      // Full city reveal
+      map.flyTo({
+        center: [77.58, 12.975],
+        zoom: 10.1,
+        bearing: 0,
+        duration: 2200,
+        easing: t => 1 - Math.pow(1-t, 3)
+      });
+    }},
+
+  ];
+
+  const TOTAL_MS = 11800;
+  let startTime = null;
+  let fired = new Set();
+
+  function showPhase(label) {
+    const el = document.getElementById('phase-title');
+    el.textContent = label;
+    el.style.opacity = '0.35';
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.style.opacity = '0'; }, 1800);
+  }
+
+  function tick(now) {
+    const elapsed = now - startTime;
+    SEQUENCE.forEach((step, i) => {
+      if (!fired.has(i) && elapsed >= step.at) { fired.add(i); step.run(); }
+    });
+    const pb = document.getElementById('progress');
+    pb.style.width = Math.min(elapsed / TOTAL_MS * 100, 100) + '%';
+    if (elapsed < TOTAL_MS + 1200) {
+      requestAnimationFrame(tick);
+    } else {
+      pb.style.background = '#00f82d';
+      document.getElementById('phase-title').textContent = '✓ Done — stop recording';
+      document.getElementById('phase-title').style.opacity = '0.5';
+    }
+  }
+
+  function begin() {
+    const ss = document.getElementById('start-screen');
+    ss.classList.add('fade-out');
+    setTimeout(() => { ss.style.display = 'none'; }, 900);
+    document.getElementById('progress').style.opacity = '1';
+    startTime = performance.now();
+    fired.clear();
+    requestAnimationFrame(tick);
+  }
+  </script>
+</body>
+</html>

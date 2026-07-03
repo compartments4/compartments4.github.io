@@ -1,0 +1,11 @@
+Pedestrian Infrastructure,Vehicular Infrastructure,Traffic Control
+footpath,median_island,signals
+refuge_islands,landscape,cctv
+pedestrian_crossing,cat_eyes,vehicular_light
+street_furniture,lane_marking,traffic_police_chowk
+pavers,median,pedestrian_light
+tactile_pavers,rumble_strips,signage
+pedestrian_only_zone,bus_stop_shifting,pelican_signals
+tree_pits,autobays,
+table_top,cycle_track,
+bollards,pickup_dropoff,
