@@ -1,6 +1,0 @@
-node_modules/
-.DS_Store
-.agents/
-.claude/
-old/
-dashboard/datasets/land-use.geojson
