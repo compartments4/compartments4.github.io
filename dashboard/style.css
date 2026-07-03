@@ -36,10 +36,33 @@ body {
   z-index: 10;
 }
 
+#header-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 #header-search {
   width: 280px;
   flex-shrink: 0;
-  margin-left: auto;
+}
+
+#btn-info-panel::part(base) {
+  color: var(--color-darkblue);
+  background-color: var(--color-white);
+  border: 2px solid var(--color-highlightblue);
+}
+
+#btn-info-panel::part(base):hover {
+  color: var(--color-white);
+  background-color: var(--color-darkblue);
+}
+
+#btn-info-panel.active::part(base) {
+  color: var(--color-highlightblue);
+  background-color: var(--color-darkblue);
 }
 
 #header-search > * {
@@ -269,6 +292,10 @@ body {
   border-top: 1px solid rgba(128, 128, 128, 0.546);
 }
 
+#panel-view-details {
+  width: 100%;
+}
+
 #panel-view-details::part(base) {
   background-color: var(--color-yellow);
   border-color: var(--color-blue);
@@ -282,6 +309,35 @@ body {
   border-color: var(--color-yellow);
 }
 
+#panel-vote-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border: 1.5px solid var(--color-darkblue);
+  color: var(--color-darkblue);
+  border-radius: 0;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0 12px;
+}
+
+#panel-vote-btn #panel-vote-count {
+  opacity: 0.6;
+}
+
+#panel-vote-btn.voted {
+  background: #2f7d5c;
+  border-color: #2f7d5c;
+  color: #e6dcc9;
+}
+
+#panel-vote-btn.voted #panel-vote-count {
+  opacity: 0.75;
+}
+
 #feature-panel-content {
   padding: 0px 20px 32px;
 }
@@ -292,6 +348,8 @@ body {
   flex-wrap: wrap;
   margin-bottom: 20px;
 }
+
+sl-tag[hidden] { display: none !important; }
 
 .panel-fields {
   margin-bottom: 16px;
@@ -400,6 +458,95 @@ sl-tag[data-tag="crash-pattern"]::part(base) {
   z-index: 10;
 }
 
+/* ── Info panel ──────────────────────────────────────────── */
+
+#info-panel {
+  --size: 320px;
+  --body-spacing: 0;
+}
+
+#info-panel::part(overlay)      { display: none; }
+#info-panel::part(body)         { scrollbar-width: none; overflow-y: hidden; }
+#info-panel::part(panel)        { height: 95%; top: 2.5%; right: 50px; border-radius: 0; background-color: var(--color-white); }
+#info-panel::part(header)       { background-color: var(--color-white); }
+#info-panel::part(title)        { color: var(--color-darkblue); font-size: 20px; }
+#info-panel::part(close-button) { color: var(--color-darkblue); }
+#info-panel::part(close-button):hover { color: var(--color-highlightblue); }
+
+#info-panel-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.info-tabs {
+  display: flex;
+  padding: 16px 20px;
+  flex-shrink: 0;
+}
+
+.info-tab {
+  flex: 1;
+  padding: 7px 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: transparent;
+  border: 1.5px solid var(--color-darkblue);
+  color: var(--color-darkblue);
+  font-family: inherit;
+}
+
+.info-tab + .info-tab { border-left: none; }
+
+.info-tab.active {
+  background: var(--color-darkblue);
+  color: var(--color-white);
+}
+
+.info-table-wrap {
+  overflow-y: auto;
+  flex: 1;
+  padding-bottom: 16px;
+}
+
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.info-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--color-white);
+  color: var(--color-blue);
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--color-lightblue);
+}
+
+.info-table thead th:last-child {
+  text-align: right;
+}
+
+.info-table tbody tr {
+  border-bottom: 0.5px solid rgba(0,0,0,0.08);
+  cursor: pointer;
+}
+
+.info-table tbody tr:hover { background: rgba(27,67,83,0.06); }
+
+.info-table tbody td { padding: 9px 20px; color: var(--color-darkblue); }
+
+.info-table tbody td:last-child {
+  text-align: right;
+  color: var(--color-blue);
+  font-weight: 500;
+}
+
 /* ── Tablet (≤ 1024px) ───────────────────────────────────── */
 @media (max-width: 1024px) {
   #header {
@@ -417,6 +564,9 @@ sl-tag[data-tag="crash-pattern"]::part(base) {
   #feature-panel::part(panel) {
     right: 20px;
   }
+
+  #info-panel { --size: min(420px, 90vw); }
+  #info-panel::part(panel) { right: 20px; }
 }
 
 /* ── Mobile (≤ 640px) ────────────────────────────────────── */
@@ -470,4 +620,7 @@ sl-tag[data-tag="crash-pattern"]::part(base) {
     right: 0;
     border-radius: 16px 16px 0 0;
   }
+
+  #info-panel { --size: 100%; }
+  #info-panel::part(panel) { height: 80%; top: 20%; right: 0; border-radius: 16px 16px 0 0; }
 }

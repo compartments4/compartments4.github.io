@@ -13,6 +13,8 @@
         <script src="../libs/maplibre-gl-layers-control.js"></script>
         <script src="https://unpkg.com/@maptiler/geocoding-control@3.0.0/dist/maplibregl.umd.js"></script>
 
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css" />
         <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js"></script>
 
@@ -66,20 +68,23 @@
                 </sl-menu>
             </sl-dropdown>
 
-            <sl-dropdown class="header-filter" id="filter-budget" stay-open-on-select hoist distance="4">
+           <!--<sl-dropdown class="header-filter" id="filter-budget" stay-open-on-select hoist distance="4">
                 <sl-button slot="trigger" caret>Budget</sl-button>
                 <sl-input placeholder="Search…" size="small" clearable></sl-input>
                 <sl-menu>
                     <sl-menu-item value="all">All</sl-menu-item>
                 </sl-menu>
-            </sl-dropdown>
+            </sl-dropdown>-->
 
             <sl-button id="btn-reset-filters" variant="text" size="small">
                 <sl-icon slot="prefix" name="arrow-counterclockwise"></sl-icon>
                 Reset
             </sl-button>
 
-            <div id="header-search"></div>
+            <div id="header-right">
+                <div id="header-search"></div>
+                <sl-icon-button id="btn-info-panel" name="info-lg" label="Open data tables"></sl-icon-button>
+            </div>
         </div>
 
         <div id="map-wrap">
@@ -89,12 +94,12 @@
                 <div class="overlay-row">
                     <span class="overlay-swatch swatch-pl"></span>
                     <span class="overlay-label">Priority Locations</span>
-                    <span class="overlay-count" id="stat-pl">175</span>
+                    <span class="overlay-count" id="stat-pl">180</span>
                 </div>
                 <div class="overlay-row">
                     <span class="overlay-swatch swatch-bs"></span>
                     <span class="overlay-label">Blackspots (BTP 2023–2025)</span>
-                    <span class="overlay-count" id="stat-bs">63</span>
+                    <span class="overlay-count" id="stat-bs">62</span>
                 </div>
                 <div class="overlay-row">
                     <span class="overlay-swatch swatch-jd"></span>
@@ -110,11 +115,31 @@
                     <span class="overlay-count" id="stat-f15">26</span>
                 </div>
             </div>
+            <sl-drawer id="info-panel" contained label="Counts">
+                <div id="info-panel-content">
+                    <div class="info-tabs">
+                        <button class="info-tab" data-tab="blackspots">Blackspots</button>
+                        <button class="info-tab" data-tab="crash">Crash Junctions</button>
+                        <button class="info-tab active" data-tab="votes">Votes</button>
+                    </div>
+                    <div class="info-table-wrap" id="info-tab-blackspots" hidden></div>
+                    <div class="info-table-wrap" id="info-tab-crash" hidden></div>
+                    <div class="info-table-wrap" id="info-tab-votes"></div>
+                </div>
+            </sl-drawer>
+
             <sl-drawer id="feature-panel" contained label="">
-                <sl-button id="panel-view-details" slot="footer" variant="default" href="#" target="_blank">
-                    View Details
-                    <sl-icon slot="suffix" name="arrow-right"></sl-icon>
-                </sl-button>
+                <div slot="footer" style="display:flex; gap:8px; width:100%;">
+                    <sl-button id="panel-view-details" variant="default" style="flex:1;" href="#" target="_blank">
+                        View Details
+                        <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                    </sl-button>
+                    <button id="panel-vote-btn" style="flex:1;">
+                        <sl-icon name="hand-thumbs-up"></sl-icon>
+                        <span id="panel-vote-label">Vote</span>
+                        <span id="panel-vote-count"> · 0</span>
+                    </button>
+                </div>
                 <div id="feature-panel-content">
                     <div class="panel-header-tags" id="panel-header-tags">
                         <sl-tag id="panel-tag-theme" size="small" data-tag="theme"></sl-tag>
@@ -131,10 +156,10 @@
                             <span class="panel-value" id="panel-val-hierarchy"></span>
                         </div>
 
-                        <div class="panel-row" id="panel-row-budget">
+                        <!--<div class="panel-row" id="panel-row-budget">
                             <span class="panel-label">Budget</span>
                             <span class="panel-value" id="panel-val-budget"></span>
-                        </div>
+                        </div>-->
                     </div>
                     <sl-carousel class="panel-carousel" id="panel-carousel" navigation pagination loop mouse-dragging></sl-carousel>
                     <div class="panel-fields" id="panel-crash-section">

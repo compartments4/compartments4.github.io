@@ -3,6 +3,11 @@
 // Same key already used by ./datasets/project_intersect.json for basemap tiles.
 const MAPTILER_API_KEY = 'yElyticxrpNA6aBtbkfY';
 
+const sb = window.supabase.createClient(
+  'https://jmmzfsbnmadjyikimfpr.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptbXpmc2JubWFkanlpa2ltZnByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwNzE2OTYsImV4cCI6MjA5ODY0NzY5Nn0.csyO2f3D96l_vt9arq2IpGegklMiOAm2IxZiKKTbEYs'
+);
+
 const map = new maplibregl.Map({
   container: 'map',
   style: './datasets/project_intersect.json',
@@ -732,7 +737,7 @@ function resetAllFilters() {
  * Called once inside map.on('load').
  */
 function addFilters() {
-  const allLayers = ['blackspots-polygon', 'junctions-development-points', 'gba-wards-line', 'gba-zones-line', 'proposed-locations-points'];
+  const allLayers = ['blackspots-polygon', 'junctions-development-points', 'proposed-locations-points'];
   const junctionLayers = ['blackspots-polygon', 'junctions-development-points', 'proposed-locations-points'];
 
   addDropdownSearch('filter-corporation');
@@ -788,7 +793,7 @@ function setupMapSearch() {
 const layerLabels = {
   'blackspots-polygon':            'Blackspots',
   'junctions-development-points':  'Suraksha 75 + 15th Finance',
-  'proposed-locations-points':  '175 Junctions',
+  'proposed-locations-points':  'Priority Locations',
 };
 
 //#endregion
@@ -864,17 +869,109 @@ map.on('click', (e) => {
     .addTo(map);
 });
 
+// ── Info panel ────────────────────────────────────────────
+
+function polygonCentroid(feature) {
+  const coords = feature.geometry.coordinates[0][0];
+  const lng = coords.reduce((s, c) => s + c[0], 0) / coords.length;
+  const lat = coords.reduce((s, c) => s + c[1], 0) / coords.length;
+  return [lng, lat];
+}
+
+function buildInfoTable(containerId, col1Label, col2Label, rows) {
+  const wrap = document.getElementById(containerId);
+  if (!rows.length) { wrap.innerHTML = '<p style="padding:16px 20px;color:#888;">No data available.</p>'; return; }
+  wrap.innerHTML = `
+    <table class="info-table">
+      <thead><tr><th>${col1Label}</th><th>${col2Label}</th></tr></thead>
+      <tbody>
+        ${rows.map(r => `<tr data-lng="${r.center[0]}" data-lat="${r.center[1]}"><td>${r.label}</td><td>${r.count}</td></tr>`).join('')}
+      </tbody>
+    </table>`;
+  wrap.querySelectorAll('tbody tr').forEach(tr => {
+    tr.addEventListener('click', () => {
+      map.flyTo({ center: [+tr.dataset.lng, +tr.dataset.lat], zoom: 17, duration: 800 });
+    });
+  });
+}
+
+function buildBlackspotsTable() {
+  const rows = (_sourceCache['blackspots'] ?? [])
+    .filter(f => f.properties.Crash_Count != null)
+    .sort((a, b) => b.properties.Crash_Count - a.properties.Crash_Count)
+    .map(f => ({ label: f.properties.b_code, count: f.properties.Crash_Count, center: polygonCentroid(f) }));
+  buildInfoTable('info-tab-blackspots', 'Blackspot', 'Crash Count', rows);
+}
+
+function buildCrashTable() {
+  const rows = (_sourceCache['proposed-locations'] ?? [])
+    .filter(f => f.properties.crash_count != null)
+    .sort((a, b) => b.properties.crash_count - a.properties.crash_count)
+    .map(f => ({ label: f.properties.j_code, count: f.properties.crash_count, center: f.geometry.coordinates }));
+  buildInfoTable('info-tab-crash', 'Junction ID', 'Crash Count', rows);
+}
+
+async function buildVotesTable() {
+  const wrap = document.getElementById('info-tab-votes');
+  wrap.innerHTML = '<p style="padding:16px 20px;color:#888;">Loading…</p>';
+  const { data, error } = await sb.from('junction_votes').select('junction_id, count').order('count', { ascending: false });
+  if (error) { wrap.innerHTML = '<p style="padding:16px 20px;color:#888;">Could not load votes.</p>'; return; }
+  const junctionMap = new Map((_sourceCache['proposed-locations'] ?? []).map(f => [f.properties.j_code, f.geometry.coordinates]));
+  const rows = (data ?? [])
+    .filter(r => junctionMap.has(r.junction_id))
+    .map(r => ({ label: r.junction_id, count: r.count, center: junctionMap.get(r.junction_id) }));
+  buildInfoTable('info-tab-votes', 'Junction ID', 'Votes', rows);
+}
+
+function setupInfoTabs() {
+  document.querySelectorAll('.info-tab').forEach(tab => {
+    tab.addEventListener('click', async () => {
+      document.querySelectorAll('.info-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const name = tab.dataset.tab;
+      document.querySelectorAll('.info-table-wrap').forEach(w => { w.hidden = true; });
+      const wrap = document.getElementById(`info-tab-${name}`);
+      wrap.hidden = false;
+      if (name === 'blackspots') buildBlackspotsTable();
+      if (name === 'crash') buildCrashTable();
+      if (name === 'votes') await buildVotesTable();
+    });
+  });
+}
+
+async function openInfoPanel() {
+  document.getElementById('feature-panel')?.hide();
+  await buildVotesTable();
+  // Reset to votes tab (index 2)
+  const tabs = document.querySelectorAll('.info-tab');
+  const wraps = document.querySelectorAll('.info-table-wrap');
+  tabs.forEach((t, i) => t.classList.toggle('active', i === 2));
+  wraps.forEach((w, i) => { w.hidden = i !== 2; });
+  const panel = document.getElementById('info-panel');
+  panel.show();
+  document.getElementById('btn-info-panel').classList.add('active');
+}
+
+// ──────────────────────────────────────────────────────────
+
 function openFeaturePanel(feature) {
-  const props = feature.properties;
+  const props = Object.fromEntries(
+    Object.entries(feature.properties).map(([k, v]) => {
+      if (typeof v !== 'string') return [k, v];
+      const trimmed = v.trim().replace(/^"|"$/g, '');
+      return [k, trimmed === '' || trimmed === 'null' || trimmed === 'NULL' ? null : trimmed];
+    })
+  );
   const { theme, theme_2, j_name, j_code, road_hierarchy, budget_category, crash_count } = props;
   const hierarchy = formatHierarchy(road_hierarchy);
   const name = j_name ? j_name.split(',').map(s => s.trim()).filter(s => s && s !== 'NULL').join(', ') : null;
   const crashPatterns = getCrashPatterns(props['Unique ID'], _crashPatternByUid);
 
-  // Header tags
+  // Header tags — deduplicate if theme_2 === theme
+  const effectiveTheme2 = theme_2 === theme ? null : theme_2;
   setTag('panel-tag-theme', themeLabel(theme));
-  setTag('panel-tag-theme-2', themeLabel(theme_2));
-  document.getElementById('panel-header-tags').hidden = !theme && !theme_2;
+  setTag('panel-tag-theme-2', themeLabel(effectiveTheme2));
+  document.getElementById('panel-header-tags').hidden = !theme && !effectiveTheme2;
 
   // Fields
   setRow('panel-row-id',        'panel-val-id',        j_code);
@@ -895,9 +992,57 @@ function openFeaturePanel(feature) {
 
   document.getElementById('panel-view-details').href = `junction.html?id=${j_code}`;
 
+  document.getElementById('info-panel')?.hide();
+
   const drawer = document.getElementById('feature-panel');
   drawer.label = name || j_code || '';
   drawer.show();
+
+  initPanelVote(j_code);
+}
+
+async function loadVotes(junctionId) {
+  const { data } = await sb
+    .from('junction_votes')
+    .select('count')
+    .eq('junction_id', junctionId)
+    .maybeSingle();
+  return data?.count ?? 0;
+}
+
+async function initPanelVote(junctionId) {
+  const storageKey = `voted:${junctionId}`;
+  const btn     = document.getElementById('panel-vote-btn');
+  const labelEl = document.getElementById('panel-vote-label');
+  const countEl = document.getElementById('panel-vote-count');
+
+  btn.classList.remove('voted');
+  labelEl.textContent = 'Vote';
+
+  let currentCount = await loadVotes(junctionId);
+  countEl.textContent = ` · ${currentCount}`;
+
+  if (localStorage.getItem(storageKey)) btn.classList.add('voted'), labelEl.textContent = 'Voted';
+
+  btn.onclick = async () => {
+    const voted = !!localStorage.getItem(storageKey);
+    const newCount = voted ? Math.max(0, currentCount - 1) : currentCount + 1;
+    const { error } = await sb
+      .from('junction_votes')
+      .upsert({ junction_id: junctionId, count: newCount }, { onConflict: 'junction_id' });
+    if (error) { console.error('Vote failed:', error); return; }
+    currentCount = newCount;
+    countEl.textContent = ` · ${currentCount}`;
+    if (voted) {
+      localStorage.removeItem(storageKey);
+      btn.classList.remove('voted');
+      labelEl.textContent = 'Vote';
+    } else {
+      localStorage.setItem(storageKey, '1');
+      btn.classList.add('voted');
+      labelEl.textContent = 'Voted';
+    }
+  };
 }
 
 function evalFilter(filter, props) {
@@ -948,6 +1093,11 @@ map.on('load', async () => {
 
   addFilters();
   setupMapSearch();
+  setupInfoTabs();
+  document.getElementById('btn-info-panel').addEventListener('click', openInfoPanel);
+  document.getElementById('info-panel').addEventListener('sl-after-hide', () => {
+    document.getElementById('btn-info-panel').classList.remove('active');
+  });
 
   await Promise.all([
     cacheSource('blackspots',             'blackspots.geojson'),
@@ -957,6 +1107,7 @@ map.on('load', async () => {
 
   document.getElementById('loading').style.display = 'none';
   updateOverlayStats();
+  openInfoPanel();
 });
 
 map.on('style.load', () => console.log('Style loaded'));

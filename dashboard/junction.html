@@ -8,6 +8,8 @@
 
         <title>Junction Detail</title>
 
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css" />
         <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js"></script>
 
@@ -49,10 +51,12 @@
                         <span class="panel-value" id="panel-val-hierarchy"></span>
                     </div>
 
+                    <!-- budget row hidden; restore when needed
                     <div class="panel-row" id="panel-row-budget">
                         <span class="panel-label">Budget</span>
                         <span class="panel-value" id="panel-val-budget"></span>
                     </div>
+                    -->
                 </div>
 
                 <sl-carousel class="panel-carousel" id="panel-carousel" navigation pagination loop mouse-dragging></sl-carousel>
@@ -66,6 +70,14 @@
                         <span class="panel-label">Crash Patterns</span>
                         <div class="panel-tags" id="panel-val-crash-patterns"></div>
                     </div>
+                </div>
+
+                <div class="detail-vote">
+                    <button id="detail-vote-btn">
+                        <sl-icon name="hand-thumbs-up"></sl-icon>
+                        <span id="detail-vote-label">Vote</span>
+                        <span id="detail-vote-count"> · 0</span>
+                    </button>
                 </div>
 
             </aside>
@@ -98,6 +110,45 @@
 
         <script src="panel-shared.js"></script>
         <script>
+            const sb = window.supabase.createClient(
+              'https://jmmzfsbnmadjyikimfpr.supabase.co',
+              'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptbXpmc2JubWFkanlpa2ltZnByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwNzE2OTYsImV4cCI6MjA5ODY0NzY5Nn0.csyO2f3D96l_vt9arq2IpGegklMiOAm2IxZiKKTbEYs'
+            );
+
+            async function initVotes(junctionId) {
+              const storageKey = `voted:${junctionId}`;
+              const btn     = document.getElementById('detail-vote-btn');
+              const labelEl = document.getElementById('detail-vote-label');
+              const countEl = document.getElementById('detail-vote-count');
+
+              const { data } = await sb
+                .from('junction_votes').select('count').eq('junction_id', junctionId).maybeSingle();
+              let currentCount = data?.count ?? 0;
+              countEl.textContent = ` · ${currentCount}`;
+
+              if (localStorage.getItem(storageKey)) btn.classList.add('voted'), labelEl.textContent = 'Voted';
+
+              btn.addEventListener('click', async () => {
+                const voted = !!localStorage.getItem(storageKey);
+                const newCount = voted ? Math.max(0, currentCount - 1) : currentCount + 1;
+                const { error } = await sb
+                  .from('junction_votes')
+                  .upsert({ junction_id: junctionId, count: newCount }, { onConflict: 'junction_id' });
+                if (error) { console.error('Vote failed:', error); return; }
+                currentCount = newCount;
+                countEl.textContent = ` · ${currentCount}`;
+                if (voted) {
+                  localStorage.removeItem(storageKey);
+                  btn.classList.remove('voted');
+                  labelEl.textContent = 'Vote';
+                } else {
+                  localStorage.setItem(storageKey, '1');
+                  btn.classList.add('voted');
+                  labelEl.textContent = 'Voted';
+                }
+              });
+            }
+
             const AUDIT_FIELDS = [
                 ['footpath', 'Footpath'], ['refuge_islands', 'Refuge Islands'], ['signals', 'Signals'],
                 ['cctv', 'CCTV'], ['vehicular_light', 'Vehicular light'], ['lane_marking', 'Lane Marking'],
@@ -226,6 +277,8 @@
                 document.getElementById('countermeasures-expand').addEventListener('click', () => {
                     document.getElementById('countermeasures-dialog').show();
                 });
+
+                await initVotes(j_code);
 
                 const labelByKey = new Map(AUDIT_FIELDS);
                 const auditBody = document.getElementById('audit-data-body');

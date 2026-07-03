@@ -59,7 +59,7 @@ const THEME_LABELS = {
   Transit: 'Transit Nodes'
 };
 
-const themeLabel = (val) => THEME_LABELS[val] || val;
+const themeLabel = (val) => { const v = val?.trim(); return v ? (THEME_LABELS[v] || v) : ''; };
 
 const formatHierarchy = (val) => {
   if (!val) return null;
@@ -103,6 +103,7 @@ function setTag(id, value) {
 
 function setRow(rowId, valId, value) {
   const row = document.getElementById(rowId);
+  if (!row) return;
   const empty = value == null || value === '';
   row.hidden = empty;
   if (!empty) document.getElementById(valId).textContent = value;
@@ -110,6 +111,7 @@ function setRow(rowId, valId, value) {
 
 function setTagRow(rowId, valId, value, tagName) {
   const row = document.getElementById(rowId);
+  if (!row) return;
   row.hidden = !value;
   if (value) document.getElementById(valId).innerHTML = makeTags(value, tagName);
 }

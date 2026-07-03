@@ -262,4 +262,4 @@
   })(window);
   var LayersControl_default = LayersControl;
 })();
-//# sourceMappingURL=maplibre-gl-layers-control.js.map
+
