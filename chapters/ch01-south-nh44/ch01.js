@@ -369,6 +369,33 @@ export const steps = [
     },
   },
 
+  // High Risk Contexts
+  {
+    center: [77.69, 12.87], zoom: 11.2,
+    enter(map) {
+      showLayer(map, 'south-crashes');
+      setLayerOpacity(map, 'crash-points-heat', 0.1);
+      filterLayerByValues(map, 'south-crashes', 'Context Mapping', Object.keys(Charts.highRiskContextColors));
+      colorLayerByValues(map, 'south-crashes', 'Context Mapping', Charts.highRiskContextColors, 'rgba(255,255,255,0.04)');
+      showLegend([
+        { shape: 'circle', fill: Charts.highRiskContextColors['Along Main Road'],       stroke: null, label: 'Along Main Road (75)' },
+        { shape: 'circle', fill: Charts.highRiskContextColors['Access Point'],          stroke: null, label: 'Access Point (43)' },
+        { shape: 'circle', fill: Charts.highRiskContextColors['Bus Stop'],              stroke: null, label: 'Bus Stop (39)' },
+        { shape: 'circle', fill: Charts.highRiskContextColors['Along Service Road'],    stroke: null, label: 'Along Service Road (24)' },
+        { shape: 'circle', fill: Charts.highRiskContextColors['Intersection'],          stroke: null, label: 'Intersection (17)' },
+      ]);
+      Charts.chartHighRiskContexts(map);
+    },
+    exit(map) {
+      clearLayerFilter(map, 'south-crashes');
+      resetLayerColor(map, 'south-crashes', '#e31010a0');
+      hideLayer(map, 'south-crashes');
+      setLayerOpacity(map, 'crash-points-heat', 0.6);
+      hideLegend();
+      Charts.clearChart();
+    },
+  },
+
 ];
 
 //#endregion

@@ -202,3 +202,25 @@ export function chartJunctionTypes(map,
 //#endregion
 
 export { clearChart };
+
+//#region Chart: High Risk Contexts
+
+// Top 5 contexts by crash count, shades of pink darkest = most crashes
+export const highRiskContextColors = {
+  'Along Main Road':    '#f15c61',  // 75 — darkest pink
+  'Access Point':       '#f47c7f',  // 43
+  'Bus Stop':           '#f79ea0',  // 39
+  'Along Service Road': '#fab8ba',  // 24
+  'Intersection':       '#fcd4d5',  // 17 — lightest pink
+};
+
+export function chartHighRiskContexts(map) {
+  drawBarChart(map, 'south-crashes', 'Context Mapping', {
+    title: 'Crash Count by Context',
+    subtitle: 'Top 5 high-risk locations on South NH 44',
+    colors: highRiskContextColors,
+    filter: { attribute: 'Context Mapping', values: Object.keys(highRiskContextColors) },
+  });
+}
+
+//#endregion
