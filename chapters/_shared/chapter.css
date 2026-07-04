@@ -418,6 +418,28 @@ body::before {
 
 @media (max-width: 640px) {
   #right-panel { width: 90%; }
+
+  #text-panel { padding: 16px 18px; max-height: 25vh; }
+
+  .step-label { font-size: 10px; margin-bottom: 6px; }
+
+  .step-content h1 { font-size: 17px; margin-bottom: 8px; }
+  .step-content h2 { font-size: 15px; margin-bottom: 8px; }
+  .step-content p  { font-size: 13px; line-height: 1.6; margin-bottom: 6px; }
+  .step-content strong { font-size: 13px; }
+
+  .nav-btn { width: 36px; height: 36px; font-size: 18px; }
+  #step-indicator { font-size: 11px; }
+
+  .ch-carousel-caption { font-size: 12px; }
+  .ch-carousel-bottom { padding: 4px 8px; }
+
+  #chart-panel { padding: 12px 14px; }
+  #chart-panel .chart-title { font-size: 13px; margin-bottom: 6px; }
+  #chart-panel .chart-subtitle { font-size: 11px; margin-bottom: 6px; }
+
+  .legend-label { font-size: 11px; }
+  #legend { padding: 7px 10px; }
 }
 
 
