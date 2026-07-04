@@ -415,3 +415,9 @@ body::before {
 }
 
 /* #endregion */
+
+@media (max-width: 640px) {
+  #right-panel { width: 90%; }
+}
+
+
