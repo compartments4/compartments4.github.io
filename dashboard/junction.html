@@ -23,7 +23,7 @@
     <body>
 
         <header class="detail-header">
-            <sl-button href="index.html" size="small" circle>
+            <sl-button size="small" circle onclick="goBack()">
                 <sl-icon name="arrow-left"></sl-icon>
             </sl-button>
             <div class="detail-header-titles">
@@ -108,6 +108,15 @@
             <div id="countermeasures-body-expanded"></div>
         </sl-dialog>
 
+        <script>
+            function goBack() {
+                if (document.referrer && document.referrer.includes('projectintersect.framer.website')) {
+                    window.history.back();
+                } else {
+                    window.location.href = 'https://projectintersect.framer.website/dashboard';
+                }
+            }
+        </script>
         <script src="panel-shared.js"></script>
         <script>
             const sb = window.supabase.createClient(
