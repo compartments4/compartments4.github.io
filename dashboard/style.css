@@ -625,4 +625,7 @@ sl-tag[data-tag="crash-pattern"]::part(base) {
 
   #info-panel { --size: 100%; }
   #info-panel::part(panel) { height: 80%; top: 20%; right: 0; border-radius: 16px 16px 0 0; }
+
+  #header { display: none; }
+  #panel-view-details { display: none !important; }
 }

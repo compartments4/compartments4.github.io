@@ -1107,7 +1107,7 @@ map.on('load', async () => {
 
   document.getElementById('loading').style.display = 'none';
   updateOverlayStats();
-  openInfoPanel();
+  if (window.innerWidth > 640) openInfoPanel();
 });
 
 map.on('style.load', () => console.log('Style loaded'));
