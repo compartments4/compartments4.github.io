@@ -110,10 +110,10 @@
 
         <script>
             function goBack() {
-                if (document.referrer && document.referrer.includes('projectintersect.framer.website')) {
+                if (document.referrer) {
                     window.history.back();
                 } else {
-                    window.location.href = 'https://projectintersect.framer.website/dashboard';
+                    window.location.href = 'index.html';
                 }
             }
         </script>
