@@ -418,6 +418,10 @@ body::before {
 
 @media (max-width: 640px) {
   #right-panel { width: 90%; }
+  #map { width: 100%; height: 50%; }
+
+  #carousel-panel,
+  #carousel-panel-p03 { max-height: 25vh; }
 
   #text-panel { padding: 16px 18px; max-height: 25vh; }
 
@@ -434,7 +438,8 @@ body::before {
   .ch-carousel-caption { font-size: 12px; }
   .ch-carousel-bottom { padding: 4px 8px; }
 
-  #chart-panel { padding: 12px 14px; }
+  #chart-panel { padding: 12px 14px; max-height: 25vh; }
+  #bottom-section { max-height: 25vh; margin-top: auto; }
   #chart-panel .chart-title { font-size: 13px; margin-bottom: 6px; }
   #chart-panel .chart-subtitle { font-size: 11px; margin-bottom: 6px; }
 
